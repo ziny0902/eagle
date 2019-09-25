@@ -1,0 +1,55 @@
+#ifndef __GL_APP_3D_H__
+#define __GL_APP_3D_H__
+#include <vector>
+#include <GLPP/texture.h>
+#include "axis.3D.h"
+#include "mesh.h"
+#include "plot3d.h"
+#include "vector3d.h"
+#include "object3d.h"
+#include "gl_resource_manager.h"
+#include "gl_text.h"
+
+#define MAX_VAO_NUM   2
+
+class GlApp3D {
+
+public:
+  GlApp3D();
+  ~GlApp3D();
+  virtual void Draw();
+  virtual void StartUp(void);
+  void set_window_size(int w, int h);
+  void ChangeLookAt(float x, float y, float z);
+  void ModelRotate(float x, float y, float z);
+  void ModelTranslate(float x, float y, float z);
+  void screen_2_world(float &x, float &y, float &z);
+
+private:
+  int m_w, m_h;
+  bool m_mesh_enabled, m_plot3d_enabled, m_figure_enabled, m_vector_enabled;
+  const std::string c_u_color = "u_Color";
+
+  unsigned int m_vertArray;
+  unsigned int m_2d_vertArray;
+  unsigned int m_shader;
+  Gl::ResourceManager m_manager;
+
+  Axis3D m_x_axis;
+  Axis3D m_y_axis;
+  Axis3D m_z_axis;
+
+  Plot3D m_plot3d;
+  Mesh m_mesh;
+  Vector3d m_vector3d;
+  Object3D m_figure;
+  GlTextObject m_text;
+
+  glm::mat4 m_rotate;
+  glm::mat4 m_projection;
+  glm::mat4 m_view;
+  glm::mat4 m_model;
+
+};
+
+#endif

@@ -1,0 +1,368 @@
+#include <iostream>
+#include <epoxy/gl.h>
+#include <string>
+#include <gtkmm/application.h>
+#include "GtkWindow.h"
+#include "ini.h"
+
+using std::cerr;
+using std::endl;
+using std::string;
+
+
+static Gtk::Box *create_labeled_scale(const char * l, Gtk::Scale &s)
+{
+  Gtk::Label *label = Gtk::manage(new Gtk::Label(l));
+  Gtk::Box *control_box = Gtk::manage(new Gtk::Box(Gtk::ORIENTATION_HORIZONTAL, 5));
+  Gtk::Separator *separator = Gtk::manage(new Gtk::Separator(Gtk::ORIENTATION_VERTICAL));
+  control_box->pack_start(*label, false, false);
+  control_box->pack_start(*separator, false, false);
+  control_box->pack_start(s);
+  return control_box;
+}
+
+
+GtkAppWindow::GtkAppWindow() :
+  box_container(Gtk::ORIENTATION_VERTICAL, 10),
+  m_adjustment_lookat_x( Gtk::Adjustment::create(0, -10.0, 10.0, 0.1, 1.0) ),
+  m_adjustment_lookat_y( Gtk::Adjustment::create(0, -10.0, 10.0, 0.1, 1.0) ),
+  m_adjustment_lookat_z( Gtk::Adjustment::create(10.0, -10.0, 10.0, 0.1, 1.0) ),
+
+  m_adjustment_rotate_x( Gtk::Adjustment::create(0, -180, 180, 1.0, 2.0) ),
+  m_adjustment_rotate_y( Gtk::Adjustment::create(0, -180, 180, 1.0, 2.0) ),
+  m_adjustment_rotate_z( Gtk::Adjustment::create(0, -180, 180, 1.0, 2.0) ),
+
+  m_adjustment_translate_x( Gtk::Adjustment::create(0, -10, 10, 1.0, 2.0) ),
+  m_adjustment_translate_y( Gtk::Adjustment::create(-4.6, -10, 10, 1.0, 2.0) ),
+  m_adjustment_translate_z( Gtk::Adjustment::create(0, -10, 10, 1.0, 2.0) ),
+
+  m_rotate_x(m_adjustment_rotate_x),
+  m_rotate_y(m_adjustment_rotate_y),
+  m_rotate_z(m_adjustment_rotate_z),
+
+  m_Scale_x(m_adjustment_lookat_x),
+  m_Scale_y(m_adjustment_lookat_y),
+  m_Scale_z(m_adjustment_lookat_z)
+{
+// scale value init from file(graph3d.ini) 
+IniManager ini("config/graph3d.ini");
+
+std::shared_ptr<std::vector<double>> v = ini.get_double_list("window", "lookat_x");
+if(v != nullptr&&v->size() >= 3) 
+  m_adjustment_lookat_x->configure((*v)[0], (*v)[1], (*v)[2], 0.1, 2, 0);
+v = ini.get_double_list("window", "lookat_y");
+if(v != nullptr&&v->size() >= 3) 
+  m_adjustment_lookat_y->configure((*v)[0], (*v)[1], (*v)[2], 0.1, 2, 0);
+v = ini.get_double_list("window", "lookat_z");
+if(v != nullptr&&v->size() >= 3) 
+  m_adjustment_lookat_z->configure((*v)[0], (*v)[1], (*v)[2], 0.1, 2, 0);
+
+v = ini.get_double_list("window", "rotate_x");
+if(v != nullptr&&v->size() >=  3) 
+  m_adjustment_rotate_x->configure((*v)[0], (*v)[1], (*v)[2], 0.1, 2, 0);
+v = ini.get_double_list("window", "rotate_y");
+if(v != nullptr&&v->size() >= 3) 
+  m_adjustment_rotate_y->configure((*v)[0], (*v)[1], (*v)[2], 0.1, 2, 0);
+v = ini.get_double_list("window", "rotate_z");
+if(v != nullptr&&v->size() >= 3) 
+  m_adjustment_rotate_z->configure((*v)[0], (*v)[1], (*v)[2], 0.1, 2, 0);
+
+v = ini.get_double_list("window", "translate_x");
+if(v != nullptr&&v->size() >= 3) 
+  m_adjustment_translate_x->configure((*v)[0], (*v)[1], (*v)[2], 0.1, 2, 0);
+v = ini.get_double_list("window", "translate_y");
+if(v != nullptr&&v->size() >= 3) 
+  m_adjustment_translate_y->configure((*v)[0], (*v)[1], (*v)[2], 0.1, 2, 0);
+v = ini.get_double_list("window", "translate_z");
+if(v != nullptr&&v->size() >= 3) 
+  m_adjustment_translate_z->configure((*v)[0], (*v)[1], (*v)[2], 0.1, 2, 0);
+//
+
+  set_default_size(600, 600);
+
+  box_container.set_homogeneous(false);
+  box_container.pack_start(m_gl_area);
+
+// Create control layout.
+//
+// 'Looak At' control panel.
+  Gtk::Button *button_reset = Gtk::manage(new Gtk::Button("Reset"));
+  button_reset->signal_clicked().connect(sigc::mem_fun(*this,
+  &GtkAppWindow::on_lookat_reseted));
+
+  Gtk::Grid *control_grid = Gtk::manage(new Gtk::Grid());
+  control_grid->set_row_homogeneous(true);
+  control_grid->set_column_homogeneous(true);
+  control_grid->attach(*(create_labeled_scale(" X ", m_Scale_x)), 0, 0);
+  control_grid->attach(*(create_labeled_scale(" Y ", m_Scale_y)), 1, 0);
+  control_grid->attach(*(create_labeled_scale(" Z ", m_Scale_z)), 2, 0);
+  Gtk::Label *label = Gtk::manage(new Gtk::Label("Look At"));
+  label->set_size_request(60);
+  Gtk::Box *label_box = Gtk::manage(new Gtk::Box(Gtk::ORIENTATION_HORIZONTAL, 5));
+  Gtk::Separator *separator = Gtk::manage(new Gtk::Separator(Gtk::ORIENTATION_VERTICAL));
+  separator->set_size_request(10);
+  label_box->pack_start(*label, false, false);
+  label_box->pack_start(*separator, false, false);
+  label_box->pack_start(*button_reset, false, false);
+  label_box->pack_start(*control_grid);
+  box_container.pack_start(*label_box, false, false);
+
+// 'Rotate' control panel.
+  button_reset = Gtk::manage(new Gtk::Button("Reset"));
+  button_reset->signal_clicked().connect(sigc::mem_fun(*this,
+  &GtkAppWindow::on_rotate_reseted));
+
+  control_grid = Gtk::manage(new Gtk::Grid());
+  control_grid->set_row_homogeneous(true);
+  control_grid->set_column_homogeneous(true);
+  label_box = Gtk::manage(new Gtk::Box(Gtk::ORIENTATION_HORIZONTAL, 5));
+  control_grid->attach(*(create_labeled_scale(" X ", m_rotate_x)), 0, 0);
+  control_grid->attach(*(create_labeled_scale(" Y ", m_rotate_y)), 1, 0);
+  control_grid->attach(*(create_labeled_scale(" Z ", m_rotate_z)), 2, 0);
+  label = Gtk::manage(new Gtk::Label("Rotae"));
+  label->set_size_request(60);
+  separator = Gtk::manage(new Gtk::Separator(Gtk::ORIENTATION_VERTICAL));
+  separator->set_size_request(10);
+  label_box->pack_start(*label, false, false);
+  label_box->pack_start(*separator, false, false);
+  label_box->pack_start(*button_reset, false, false);
+  label_box->pack_start(*control_grid);
+  box_container.pack_start(*label_box, false, false);
+
+// 'Translate' control panel.
+  button_reset = Gtk::manage(new Gtk::Button("Reset"));
+  button_reset->signal_clicked().connect(sigc::mem_fun(*this,
+  &GtkAppWindow::on_translate_reseted));
+
+  control_grid = Gtk::manage(new Gtk::Grid());
+  control_grid->set_row_homogeneous(true);
+  control_grid->set_column_homogeneous(true);
+  label_box = Gtk::manage(new Gtk::Box(Gtk::ORIENTATION_HORIZONTAL, 5));
+  Gtk::Scale *translate_x = Gtk::manage(new Gtk::Scale(m_adjustment_translate_x));
+  Gtk::Scale *translate_y = Gtk::manage(new Gtk::Scale(m_adjustment_translate_y));
+  Gtk::Scale *translate_z = Gtk::manage(new Gtk::Scale(m_adjustment_translate_z));
+  control_grid->attach(*(create_labeled_scale(" X ", *translate_x)), 0, 0);
+  control_grid->attach(*(create_labeled_scale(" Y ", *translate_y)), 1, 0);
+  control_grid->attach(*(create_labeled_scale(" Z ", *translate_z)), 2, 0);
+  label = Gtk::manage(new Gtk::Label("Translate"));
+  label->set_size_request(60);
+  separator = Gtk::manage(new Gtk::Separator(Gtk::ORIENTATION_VERTICAL));
+  separator->set_size_request(10);
+  label_box->pack_start(*label, false, false);
+  label_box->pack_start(*separator, false, false);
+  label_box->pack_start(*button_reset, false, false);
+  label_box->pack_start(*control_grid);
+  box_container.pack_start(*label_box, false, false);
+
+// Add highest level container 
+  add(box_container);
+
+// Add signal handler
+  m_adjustment_lookat_x->signal_value_changed().connect(sigc::mem_fun(*this,
+  &GtkAppWindow::on_lookat_changed));
+  m_adjustment_lookat_y->signal_value_changed().connect(sigc::mem_fun(*this,
+  &GtkAppWindow::on_lookat_changed));
+  m_adjustment_lookat_z->signal_value_changed().connect(sigc::mem_fun(*this,
+  &GtkAppWindow::on_lookat_changed));
+
+  m_adjustment_rotate_x->signal_value_changed().connect(sigc::mem_fun(*this,
+  &GtkAppWindow::on_rotate_changed));
+  m_adjustment_rotate_y->signal_value_changed().connect(sigc::mem_fun(*this,
+  &GtkAppWindow::on_rotate_changed));
+  m_adjustment_rotate_z->signal_value_changed().connect(sigc::mem_fun(*this,
+  &GtkAppWindow::on_rotate_changed));
+
+  m_adjustment_translate_x->signal_value_changed().connect(sigc::mem_fun(*this,
+  &GtkAppWindow::on_translate_changed));
+  m_adjustment_translate_y->signal_value_changed().connect(sigc::mem_fun(*this,
+  &GtkAppWindow::on_translate_changed));
+  m_adjustment_translate_z->signal_value_changed().connect(sigc::mem_fun(*this,
+  &GtkAppWindow::on_translate_changed));
+
+  m_gl_area.add_events(Gdk::BUTTON_RELEASE_MASK|Gdk::BUTTON_PRESS_MASK );
+
+  m_gl_area.signal_render().connect(sigc::mem_fun(*this,
+  &GtkAppWindow::on_glarea_render), true);
+  m_gl_area.signal_realize().connect(sigc::mem_fun(*this,
+  &GtkAppWindow::on_glarea_realize));
+  m_gl_area.signal_resize().connect(sigc::mem_fun(*this,
+  &GtkAppWindow::on_resize));
+  m_gl_area.signal_button_release_event().connect(sigc::mem_fun(*this,
+  &GtkAppWindow::on_button));
+
+// openGL depth buffer enable
+  m_gl_area.set_has_depth_buffer(true);
+
+  m_gl_app = nullptr;
+  show_all_children();
+}
+
+GtkAppWindow::~GtkAppWindow()
+{
+} 
+
+void GtkAppWindow::on_lookat_changed()
+{
+  float x = m_Scale_x.get_value();
+  float y = m_Scale_y.get_value();
+  float z = m_Scale_z.get_value();
+
+  if(m_gl_app != nullptr) {
+    m_gl_area.make_current();
+    m_gl_app->ChangeLookAt(x, y, z);
+    gtk_gl_area_queue_render(m_gl_area.gobj());
+  }
+
+#ifdef __DEBUG__
+  std::cout << "(" << x << "," << y << "," << z << ")" <<std::endl;
+#endif
+}
+
+void GtkAppWindow::on_lookat_reseted()
+{
+  m_adjustment_lookat_x->set_value(0.0);
+  m_adjustment_lookat_y->set_value(0.0);
+  m_adjustment_lookat_z->set_value(0.0);
+}
+
+void GtkAppWindow::on_rotate_changed()
+{
+  float x = m_rotate_x.get_value();
+  float y = m_rotate_y.get_value();
+  float z = m_rotate_z.get_value();
+
+  if(m_gl_app != nullptr) {
+    m_gl_area.make_current();
+    m_gl_app->ModelRotate(x, y, z);
+    gtk_gl_area_queue_render(m_gl_area.gobj());
+  }
+
+#ifdef __DEBUG__
+  std::cout << "(" << x << "," << y << "," << z << ")" <<std::endl;
+#endif
+}
+
+void GtkAppWindow::on_rotate_reseted()
+{
+  m_adjustment_rotate_x->set_value(0.0);
+  m_adjustment_rotate_y->set_value(0.0);
+  m_adjustment_rotate_z->set_value(0.0);
+}
+
+void GtkAppWindow::on_translate_changed()
+{
+  float x = m_adjustment_translate_x->get_value();
+  float y = m_adjustment_translate_y->get_value();
+  float z = m_adjustment_translate_z->get_value();
+
+  if(m_gl_app != nullptr) {
+    m_gl_area.make_current();
+    m_gl_app->ModelTranslate(x, y, z);
+    gtk_gl_area_queue_render(m_gl_area.gobj());
+  }
+
+#ifdef __DEBUG__
+  std::cout << "(" << x << "," << y << "," << z << ")" <<std::endl;
+#endif
+}
+
+void GtkAppWindow::on_translate_reseted()
+{
+  m_adjustment_translate_x->set_value(0.0);
+  m_adjustment_translate_y->set_value(0.0);
+  m_adjustment_translate_z->set_value(0.0);
+}
+
+void GtkAppWindow::on_glarea_realize()
+{
+// Create OpenGL Application.
+  m_gl_area.make_current();
+  glEnable(GL_DEPTH_TEST);
+  m_gl_app = std::make_shared<GlApp3D>();
+  m_gl_app->StartUp();
+  m_gl_app->set_window_size(m_gl_area.get_width(), m_gl_area.get_height());
+  // Glib::signal_timeout().connect( sigc::mem_fun(*this, &GtkAppWindow::on_timeout), 33);
+  on_translate_changed();
+  on_rotate_changed();
+  on_lookat_changed();
+}
+
+void GtkAppWindow::on_resize(int width, int height)
+{
+  m_gl_area.make_current();
+  glViewport(0, 0, width, height);
+  m_gl_app->set_window_size(m_gl_area.get_width(), m_gl_area.get_height());
+  float x = m_Scale_x.get_value();
+  float y = m_Scale_y.get_value();
+  float z = m_Scale_z.get_value();
+  m_gl_app->ChangeLookAt(x, y, z);
+  gtk_gl_area_queue_render(m_gl_area.gobj());
+}
+
+bool GtkAppWindow::on_timeout()
+{
+  gtk_gl_area_queue_render(m_gl_area.gobj());
+  return true;
+}
+
+bool GtkAppWindow::on_glarea_render(const Glib::RefPtr<Gdk::GLContext>& ctx)
+{
+  m_gl_app->Draw(); 
+  return true;
+}
+bool GtkAppWindow::on_button(GdkEventButton* release_event)
+{
+  if(release_event->type != GDK_BUTTON_RELEASE) return true;
+  m_gl_area.make_current();
+  m_gl_area.attach_buffers();
+
+	int viewport[4];
+	glGetIntegerv(GL_VIEWPORT, (int *)&viewport[0]);
+
+  float width = viewport[2];
+  float height = viewport[3];
+  width = width/2;
+  height = height/2;
+
+  float x = (float)((release_event->x - width)/width);
+  float y = (float)((height - release_event->y)/height);
+  float z = 0;
+
+#ifdef __DEBUG__
+  std::cout << "screen --> x: " << release_event->x << "; y: " << release_event->y <<std::endl;
+  std::cout << "normalize --> x: " << x << "; y: " << y <<std::endl;
+#endif
+
+  GLbyte color[4];
+  glReadPixels(release_event->x, viewport[3] - release_event->y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, color);
+
+  float depths[36];
+	glReadPixels(release_event->x-3, viewport[3]-3 - release_event->y, 6, 6, GL_DEPTH_COMPONENT, GL_FLOAT, depths);
+  z = 1;
+  for(int i = 0; i < 36; i++){
+    if(depths[i] != 1.0){
+      z = depths[i];
+      break;
+    }
+  }
+  if(z == 1) return true;
+  
+  // printf("color %02hhx%02hhx%02hhx%02hhx \n", color[0], color[1], color[2], color[3]);
+  // std::cout << "width: "<< viewport[2] << "  height:" << viewport[3] <<"  depth: " << z <<std::endl;
+
+  m_gl_app->screen_2_world(x, y, z);
+  std::cout << "x: " << x << "; y: " << y << "; z: " << z << std::endl;
+
+  return true;
+}
+
+
+int GtkAppMain(int argc, char *argv[])
+{
+
+  auto app = Gtk::Application::create("org.gtkmm.example");
+
+  GtkAppWindow window;
+
+  return app->run(window, argc, argv);
+}
