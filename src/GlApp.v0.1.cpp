@@ -25,12 +25,6 @@
 #define Y_MIN_RANGE -10
 #define Y_MAX_RANGE 10 
 
-extern float mesh_graphf(float x, float y);
-extern glm::vec3 plot_3df(float t);
-extern glm::vec3 projectilef(float t);
-extern glm::vec3 hookes_law(float t);
-extern glm::vec3 rocket_thrust(float t);
-
 GlApp3D::GlApp3D() :
   m_manager(10)
   , m_x_axis({0, 0.0, 0.0}, {X_MIN, X_MAX}, TICK_SPACING, ENUM_X_AXIS)
