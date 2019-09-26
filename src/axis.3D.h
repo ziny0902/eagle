@@ -4,6 +4,7 @@
 #include <Geo/geometry_3d_object.h>
 #include "gl_resource_manager.h"
 #include "gl_drawing_obj.h"
+#include "ini.h"
 
 using namespace std::chrono;
 
@@ -24,8 +25,8 @@ enum AXIS_DIR {
 //   - get_gl_resouce_id().
 class Axis3D : Gl::Drawable_obj{
 public:
-  Axis3D(float origin[3], float range[3], float, AXIS_DIR);
-  Axis3D(std::vector<float> origin, std::vector<float> range, float, AXIS_DIR);
+  Axis3D(IniManager&, float origin[3], float range[3], float, AXIS_DIR);
+  Axis3D(IniManager&, std::vector<float> &&origin, std::vector<float> &&range, float, AXIS_DIR);
   inline void setOffset(long offset) { m_offset = offset; }
   inline long getOffset() { return m_offset; }
   float * getArray() { return m_axis.getArray(); }
@@ -41,7 +42,7 @@ public:
   );
 
 private:
-  void initialize_axis_data(float *origin, float *range, float, AXIS_DIR dir);
+  void initialize_axis_data(IniManager&, float *origin, float *range, float, AXIS_DIR dir);
   geo::GeoModel3D m_axis;
   long m_offset;
 };

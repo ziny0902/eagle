@@ -3,7 +3,6 @@
 #include <string>
 #include <gtkmm/application.h>
 #include "GtkWindow.h"
-#include "ini.h"
 
 using std::cerr;
 using std::endl;
@@ -42,38 +41,38 @@ GtkAppWindow::GtkAppWindow() :
 
   m_Scale_x(m_adjustment_lookat_x),
   m_Scale_y(m_adjustment_lookat_y),
-  m_Scale_z(m_adjustment_lookat_z)
+  m_Scale_z(m_adjustment_lookat_z),
+  m_ini("config/graph3d.ini")
 {
 // scale value init from file(graph3d.ini) 
-IniManager ini("config/graph3d.ini");
 
-std::shared_ptr<std::vector<double>> v = ini.get_double_list("window", "lookat_x");
+std::shared_ptr<std::vector<double>> v = m_ini.get_double_list("window", "lookat_x");
 if(v != nullptr&&v->size() >= 3) 
   m_adjustment_lookat_x->configure((*v)[0], (*v)[1], (*v)[2], 0.1, 2, 0);
-v = ini.get_double_list("window", "lookat_y");
+v = m_ini.get_double_list("window", "lookat_y");
 if(v != nullptr&&v->size() >= 3) 
   m_adjustment_lookat_y->configure((*v)[0], (*v)[1], (*v)[2], 0.1, 2, 0);
-v = ini.get_double_list("window", "lookat_z");
+v = m_ini.get_double_list("window", "lookat_z");
 if(v != nullptr&&v->size() >= 3) 
   m_adjustment_lookat_z->configure((*v)[0], (*v)[1], (*v)[2], 0.1, 2, 0);
 
-v = ini.get_double_list("window", "rotate_x");
+v = m_ini.get_double_list("window", "rotate_x");
 if(v != nullptr&&v->size() >=  3) 
   m_adjustment_rotate_x->configure((*v)[0], (*v)[1], (*v)[2], 0.1, 2, 0);
-v = ini.get_double_list("window", "rotate_y");
+v = m_ini.get_double_list("window", "rotate_y");
 if(v != nullptr&&v->size() >= 3) 
   m_adjustment_rotate_y->configure((*v)[0], (*v)[1], (*v)[2], 0.1, 2, 0);
-v = ini.get_double_list("window", "rotate_z");
+v = m_ini.get_double_list("window", "rotate_z");
 if(v != nullptr&&v->size() >= 3) 
   m_adjustment_rotate_z->configure((*v)[0], (*v)[1], (*v)[2], 0.1, 2, 0);
 
-v = ini.get_double_list("window", "translate_x");
+v = m_ini.get_double_list("window", "translate_x");
 if(v != nullptr&&v->size() >= 3) 
   m_adjustment_translate_x->configure((*v)[0], (*v)[1], (*v)[2], 0.1, 2, 0);
-v = ini.get_double_list("window", "translate_y");
+v = m_ini.get_double_list("window", "translate_y");
 if(v != nullptr&&v->size() >= 3) 
   m_adjustment_translate_y->configure((*v)[0], (*v)[1], (*v)[2], 0.1, 2, 0);
-v = ini.get_double_list("window", "translate_z");
+v = m_ini.get_double_list("window", "translate_z");
 if(v != nullptr&&v->size() >= 3) 
   m_adjustment_translate_z->configure((*v)[0], (*v)[1], (*v)[2], 0.1, 2, 0);
 //
@@ -220,9 +219,15 @@ void GtkAppWindow::on_lookat_changed()
 
 void GtkAppWindow::on_lookat_reseted()
 {
-  m_adjustment_lookat_x->set_value(0.0);
-  m_adjustment_lookat_y->set_value(0.0);
-  m_adjustment_lookat_z->set_value(0.0);
+std::shared_ptr<std::vector<double>> v = m_ini.get_double_list("window", "lookat_x");
+if(v != nullptr&&v->size() >= 3) 
+  m_adjustment_lookat_x->set_value((*v)[0]);
+v = m_ini.get_double_list("window", "lookat_y");
+if(v != nullptr&&v->size() >= 3) 
+  m_adjustment_lookat_y->set_value((*v)[0]);
+v = m_ini.get_double_list("window", "lookat_z");
+if(v != nullptr&&v->size() >= 3) 
+  m_adjustment_lookat_z->set_value((*v)[0]);
 }
 
 void GtkAppWindow::on_rotate_changed()
@@ -244,9 +249,16 @@ void GtkAppWindow::on_rotate_changed()
 
 void GtkAppWindow::on_rotate_reseted()
 {
-  m_adjustment_rotate_x->set_value(0.0);
-  m_adjustment_rotate_y->set_value(0.0);
-  m_adjustment_rotate_z->set_value(0.0);
+  std::shared_ptr<std::vector<double>>v 
+    = m_ini.get_double_list("window", "rotate_x");
+  if(v != nullptr&&v->size() >=  3) 
+    m_adjustment_rotate_x->set_value((*v)[0]);
+  v = m_ini.get_double_list("window", "rotate_y");
+  if(v != nullptr&&v->size() >=  3) 
+    m_adjustment_rotate_y->set_value((*v)[0]);
+  v = m_ini.get_double_list("window", "rotate_z");
+  if(v != nullptr&&v->size() >=  3) 
+    m_adjustment_rotate_z->set_value((*v)[0]);
 }
 
 void GtkAppWindow::on_translate_changed()
@@ -268,9 +280,16 @@ void GtkAppWindow::on_translate_changed()
 
 void GtkAppWindow::on_translate_reseted()
 {
-  m_adjustment_translate_x->set_value(0.0);
-  m_adjustment_translate_y->set_value(0.0);
-  m_adjustment_translate_z->set_value(0.0);
+  std::shared_ptr<std::vector<double>>v 
+    = m_ini.get_double_list("window", "translate_x");
+  if(v != nullptr&&v->size() >= 3) 
+    m_adjustment_translate_x->set_value((*v)[0]);
+  v = m_ini.get_double_list("window", "translate_y");
+  if(v != nullptr&&v->size() >= 3) 
+    m_adjustment_translate_y->set_value((*v)[0]);
+  v = m_ini.get_double_list("window", "translate_z");
+  if(v != nullptr&&v->size() >= 3) 
+    m_adjustment_translate_z->set_value((*v)[0]);
 }
 
 void GtkAppWindow::on_glarea_realize()
@@ -278,8 +297,8 @@ void GtkAppWindow::on_glarea_realize()
 // Create OpenGL Application.
   m_gl_area.make_current();
   glEnable(GL_DEPTH_TEST);
-  m_gl_app = std::make_shared<GlApp3D>();
-  m_gl_app->StartUp();
+  m_gl_app = std::make_shared<GlApp3D>(m_ini);
+  m_gl_app->StartUp(m_ini);
   m_gl_app->set_window_size(m_gl_area.get_width(), m_gl_area.get_height());
   // Glib::signal_timeout().connect( sigc::mem_fun(*this, &GtkAppWindow::on_timeout), 33);
   on_translate_changed();

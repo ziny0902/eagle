@@ -2,6 +2,7 @@
 #define __GTK_WINDOWN_H__
 #include <gtkmm.h>
 #include "GlApp.v0.1.h"
+#include "ini.h"
 
 int GtkAppMain(int argc , char **argv);
 
@@ -39,8 +40,9 @@ protected:
   Gtk::GLArea m_gl_area;
   Gtk::Scale m_Scale_x, m_Scale_y, m_Scale_z;
   Gtk::Scale m_rotate_x, m_rotate_y, m_rotate_z;
-  // std::shared_ptr<GlApp> m_gl_app;
   std::shared_ptr<GlApp3D> m_gl_app;
+  IniManager m_ini;
+
 
 private:
 };

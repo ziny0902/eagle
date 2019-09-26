@@ -9,16 +9,17 @@
 #include "object3d.h"
 #include "gl_resource_manager.h"
 #include "gl_text.h"
+#include "ini.h"
 
 #define MAX_VAO_NUM   2
 
 class GlApp3D {
 
 public:
-  GlApp3D();
+  GlApp3D(IniManager&);
   ~GlApp3D();
   virtual void Draw();
-  virtual void StartUp(void);
+  virtual void StartUp(IniManager&);
   void set_window_size(int w, int h);
   void ChangeLookAt(float x, float y, float z);
   void ModelRotate(float x, float y, float z);

@@ -4,7 +4,13 @@
 #include "axis.3D.h"
 #include "ini.h"
 
-void Axis3D::initialize_axis_data(float *origin, float *range, float tickspacing, AXIS_DIR dir)
+void Axis3D::initialize_axis_data(
+  IniManager &ini, 
+  float *origin, 
+  float *range, 
+  float tickspacing, 
+  AXIS_DIR dir
+)
 {
   point_3d s;
   point_3d e;
@@ -14,7 +20,6 @@ void Axis3D::initialize_axis_data(float *origin, float *range, float tickspacing
   float arrow_head_len = 0;
 
   // initialize axis from file(graph3d.ini) 
-  IniManager ini("config/graph3d.ini");
 
   tickspacing = ini.get_double("GlApp", "tick_spacing");
   ticksize = ini.get_double("GlApp", "tick_size");
@@ -95,14 +100,14 @@ std::cout << std::endl;
 #endif
 }
 
-Axis3D::Axis3D(float origin[3], float range[3], float tickspacing, AXIS_DIR dir)
+Axis3D::Axis3D(IniManager &ini, float origin[3], float range[3], float tickspacing, AXIS_DIR dir)
 {
-  initialize_axis_data(origin, range, tickspacing, dir);
+  initialize_axis_data(ini, origin, range, tickspacing, dir);
 }
 
-Axis3D::Axis3D(std::vector<float> origin, std::vector<float> range, float tickspacing, AXIS_DIR dir)
+Axis3D::Axis3D(IniManager &ini, std::vector<float> &&origin, std::vector<float> &&range, float tickspacing, AXIS_DIR dir)
 {
-  initialize_axis_data(&origin[0], &range[0], tickspacing, dir);
+  initialize_axis_data(ini, &origin[0], &range[0], tickspacing, dir);
 }
 
 void Axis3D::init_gl_buffer(

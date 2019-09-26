@@ -8,7 +8,6 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <gtk/gtk.h>
 #include "GlApp.v0.1.h"
-#include "ini.h"
 
 #define NUM_OF_COORDI   3
 #define TICK_SPACING    0.5 
@@ -19,17 +18,12 @@
 #define X_MAX   10 
 #define Y_MAX   10 
 #define Z_MAX   5
-//function x,y range.
-#define X_MIN_RANGE -10
-#define X_MAX_RANGE 10 
-#define Y_MIN_RANGE -10
-#define Y_MAX_RANGE 10 
 
-GlApp3D::GlApp3D() :
+GlApp3D::GlApp3D(IniManager& ini) :
   m_manager(10)
-  , m_x_axis({0, 0.0, 0.0}, {X_MIN, X_MAX}, TICK_SPACING, ENUM_X_AXIS)
-  , m_y_axis({0, 0.0, 0.0}, {Y_MIN, Y_MAX}, TICK_SPACING, ENUM_Y_AXIS)
-  , m_z_axis({0, 0.0, 0.0}, {Z_MIN, Z_MAX}, TICK_SPACING, ENUM_Z_AXIS)
+  , m_x_axis(ini, {0, 0.0, 0.0}, {X_MIN, X_MAX}, TICK_SPACING, ENUM_X_AXIS)
+  , m_y_axis(ini, {0, 0.0, 0.0}, {Y_MIN, Y_MAX}, TICK_SPACING, ENUM_Y_AXIS)
+  , m_z_axis(ini, {0, 0.0, 0.0}, {Z_MIN, Z_MAX}, TICK_SPACING, ENUM_Z_AXIS)
   , m_plot3d()
   , m_mesh(50, 50)
   , m_vector3d({0.0, 0.0, 0.0},{3.0, 3.2, 2.5})
@@ -50,8 +44,6 @@ GlApp3D::GlApp3D() :
   shader_ptr->Bind();
   shader_ptr->SetUniformMatrix4fv("rotate", m_rotate);
   shader_ptr->SetUniformMatrix4fv("trans", m_model);
-  shader_ptr->SetUniform4f("u_Max", X_MAX, Y_MAX, Z_MAX, 1.0f);
-  shader_ptr->SetUniform4f("u_Min", X_MIN, Y_MIN, Z_MIN, 1.0f);
   shader_ptr->UnBind();
   m_vector3d.add_vector({-2.0, 2.0, 3}, {-1.0, 1.0, 2});
   m_vector3d.add_vector({-2.0, - 2.0, -3},{-1.0, - 1.0, -2});
@@ -72,7 +64,7 @@ GlApp3D::~GlApp3D()
 }
 
 #include <dlfcn.h>
-void GlApp3D::StartUp(void)
+void GlApp3D::StartUp(IniManager &ini)
 {
   std::shared_ptr<Gl::Shader> shader_ptr = m_manager.get_shader_from_shader_id(m_shader);
 
@@ -88,14 +80,23 @@ void GlApp3D::StartUp(void)
   m_z_axis.init_gl_buffer(m_manager, layout, m_shader);
 
 // initialize class from config file.
-  IniManager ini("config/graph3d.ini");
   const std::shared_ptr<std::string> lib_path_str = ini.get_string("GlApp", "graph_lib_path");
   const std::shared_ptr<std::string> plot3d_fn_str = ini.get_string("GlApp", "plot3d_func");
   const std::shared_ptr<std::string> figure_fn_str = ini.get_string("GlApp", "figure_func");
   const std::shared_ptr<std::string> mesh_fn_str =  ini.get_string("GlApp", "mesh_func");
-  const std::shared_ptr<std::vector<double>> x_range = ini.get_double_list("GlApp", "axis_x");
-  const std::shared_ptr<std::vector<double>> y_range = ini.get_double_list("GlApp", "axis_y");
-  const std::shared_ptr<std::vector<double>> z_range = ini.get_double_list("GlApp", "axis_z");
+  std::shared_ptr<std::vector<double>> mesh_range 
+    = ini.get_double_list("GlApp", "mesh_range");
+  if(mesh_range != nullptr && mesh_range->size() != 4)
+  {
+    mesh_range = nullptr;
+  }
+  std::shared_ptr<std::vector<double>> plot3d_range 
+    = ini.get_double_list("GlApp", "plot3d_range");
+  if(plot3d_range != nullptr && plot3d_range->size() != 3)
+  {
+    plot3d_range = nullptr;
+  }
+
   m_mesh_enabled = ini.get_boolean("GlApp", "mesh_enabled");
   m_plot3d_enabled = ini.get_boolean("GlApp", "plot3d_enabled");
   m_figure_enabled = ini.get_boolean("GlApp", "figure_enabled");
@@ -119,13 +120,13 @@ void GlApp3D::StartUp(void)
     exit(-1);
   }
 
-  plot3d_fn =  (glm::vec3(*)(float))dlsym(lib_handle, plot3d_fn_str->c_str());
-  figure_fn =  (glm::vec3(*)(float))dlsym(lib_handle, figure_fn_str->c_str());
-  mesh_fn =  (float(*)(float, float))dlsym(lib_handle, mesh_fn_str->c_str());
-  if(plot3d_fn == nullptr || figure_fn == nullptr || mesh_fn == nullptr) {
-    std::cout << "library loading error\n";
-    exit(-1);
-  }
+  if(plot3d_fn_str != nullptr)
+    plot3d_fn =  (glm::vec3(*)(float))dlsym(lib_handle, plot3d_fn_str->c_str());
+  if(figure_fn_str != nullptr)
+    figure_fn =  (glm::vec3(*)(float))dlsym(lib_handle, figure_fn_str->c_str());
+  if(mesh_fn_str != nullptr)
+    mesh_fn =  (float(*)(float, float))dlsym(lib_handle, mesh_fn_str->c_str());
+
   char *error;
   if ((error = dlerror()) != NULL)  
   {
@@ -135,30 +136,45 @@ void GlApp3D::StartUp(void)
   dlclose(lib_handle);
 }
 
-  if(m_mesh_enabled){
-    m_mesh.regfunc(
-      {(float)(*x_range)[0], (float)(*x_range)[1]}, 
-      {(float)(*y_range)[0], (float)(*y_range)[1]}, 
-      mesh_fn
-    );
+  if(m_mesh_enabled && mesh_fn != nullptr){
+    if(mesh_range != nullptr){
+      m_mesh.regfunc(
+        {(float)(*mesh_range)[0], (float)(*mesh_range)[1]}, 
+        {(float)(*mesh_range)[2], (float)(*mesh_range)[3]}, 
+        mesh_fn
+      );
+    }
     m_mesh.init_gl_buffer(m_manager, layout, m_shader);
   }
+  else {
+    m_mesh_enabled = false;
+  }
 
-  if(m_plot3d_enabled) {
+  if(m_plot3d_enabled && plot3d_fn != nullptr && plot3d_range != nullptr) {
     m_plot3d.regfunc(plot3d_fn);
-    m_plot3d.sampling(0.0, 160.0, 0.1);
+    m_plot3d.sampling(
+      (float)(*plot3d_range)[0], 
+      (float)(*plot3d_range)[1], 
+      (float)(*plot3d_range)[2]
+    );
     m_plot3d.init_gl_buffer(m_manager, layout, m_shader);
     // m_plot3d.activate_realtime();
+  }
+  else{
+    m_plot3d_enabled = false;
   }
 
   if(m_vector_enabled) {
     m_vector3d.init_gl_buffer(m_manager, layout, m_shader);
   }
 
-  if(m_figure_enabled) {
+  if(m_figure_enabled && figure_fn != nullptr) {
     m_figure.init_gl_buffer(m_manager, layout, m_shader);
     m_figure.regfunc(figure_fn);
     m_figure.action_start();
+  }
+  else {
+    m_figure_enabled = false;
   }
 
   m_text.init_gl_buffer(m_manager, layout, m_shader);
