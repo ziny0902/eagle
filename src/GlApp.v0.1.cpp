@@ -31,7 +31,7 @@ GlApp3D::GlApp3D(IniManager& ini) :
   , m_rotate(glm::mat4(1))
   , m_model(glm::mat4(1))
   , m_figure("BOX(1.5 1.5 0.0, 2.0 2.0 1.0)")
-  , m_text("abcdefghijklmnopqrstuvwxyz")
+  , m_text("abcdefghijklm\nnopqrstuvwxyz", ini)
 
 {
   m_w = 600;
@@ -54,8 +54,7 @@ GlApp3D::GlApp3D(IniManager& ini) :
   m_vector3d.add_vector({2.0, -2.0, 3},{1.0, -1.0, 2});
   m_vector3d.add_vector({-2.0, -2.0, 3},{-1.0, -1.0, 2});
 
-  m_text.set_pos(100, 100);
-
+  m_text.set_pos(100, 100, m_manager);
 }
 
 GlApp3D::~GlApp3D()
@@ -229,28 +228,28 @@ void GlApp3D::ModelTranslate(float x, float y, float z)
 #include <GL/glu.h>
 void GlApp3D::screen_2_world(float &x, float &y, float &z)
 {
-	glm::mat4 mvp = m_projection * m_view * m_model * m_rotate;
-	glm::mat4 inv_mvp =glm::inverse(m_rotate)* glm::inverse(m_projection *m_view*m_model);
+  glm::mat4 mvp = m_projection * m_view * m_model * m_rotate;
+  glm::mat4 inv_mvp =glm::inverse(m_rotate)* glm::inverse(m_projection *m_view*m_model);
 
-	glm::vec4 p;
+  glm::vec4 p;
 #ifdef __DEBUG__
   p= mvp * glm::vec4(2, 0, -20, 1);
-	p[0] = p[0]/p[3];
-	p[1] = p[1]/p[3];
-	p[2] = p[2]/p[3];
-	p[3] = 1;
+  p[0] = p[0]/p[3];
+  p[1] = p[1]/p[3];
+  p[2] = p[2]/p[3];
+  p[3] = 1;
 
-	glm::vec4 p_p = inv_mvp * p;
-	p_p[0] = p_p[0]/p_p[3];
-	p_p[1] = p_p[1]/p_p[3];
-	p_p[2] = p_p[2]/p_p[3];
+  glm::vec4 p_p = inv_mvp * p;
+  p_p[0] = p_p[0]/p_p[3];
+  p_p[1] = p_p[1]/p_p[3];
+  p_p[2] = p_p[2]/p_p[3];
 #endif
 
-	p = glm::vec4(x, y, ((z -0.5)/0.5), 1);
-	glm::vec4 position = inv_mvp *p; 
-	x = position[0]/position[3];
-	y = position[1]/position[3];
-	z = position[2]/position[3];
+  p = glm::vec4(x, y, ((z -0.5)/0.5), 1);
+  glm::vec4 position = inv_mvp *p; 
+  x = position[0]/position[3];
+  y = position[1]/position[3];
+  z = position[2]/position[3];
 }
 
 void GlApp3D::set_window_size(int w, int h)
@@ -308,5 +307,10 @@ void GlApp3D::Draw()
   shader_ptr->UnBind();
   m_text.Update(t_p, m_manager);
 	glFlush();
+}
+void GlApp3D::display_pixel_info(int x, int y, std::string &s)
+{
+  m_text.set_pos(x, y, m_manager);
+  m_text.update_string(std::move(s), m_manager);
 }
 

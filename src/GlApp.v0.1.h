@@ -25,6 +25,7 @@ public:
   void ModelRotate(float x, float y, float z);
   void ModelTranslate(float x, float y, float z);
   void screen_2_world(float &x, float &y, float &z);
+  void display_pixel_info(int x, int y, std::string &s);
 
 private:
   int m_w, m_h;

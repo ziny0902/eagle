@@ -2,6 +2,7 @@
 #include <vector>
 #include <string>
 #include "gl_drawing_obj.h"
+#include "ini.h"
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
@@ -18,6 +19,7 @@
 class GlTextObject : Gl::Drawable_obj{
 public:
   GlTextObject(std::string &&s);
+  GlTextObject(std::string &&s, IniManager& ini);
   void update_string
   (
     std::string &&s, 
@@ -25,7 +27,8 @@ public:
   );
   int get_width();
   int get_height();
-  void set_pos(int x, int y);
+  void set_pos(int x, int y, Gl::ResourceManager& manager);
+  void set_scale(float scale);
   void set_font_size(size_t size);
 
   // for othogonal projection.
@@ -48,22 +51,23 @@ private:
   /* GL Resource start*/
   GLuint m_tex_resource; // texture gl object
   int m_shader;
-  unsigned int m_U_tex_id; // fragment shader uniform value tex.
   /* GL Resource end.*/
   
   int m_sx, m_sy; //text starting coordinate in pixels
   int m_ww, m_wh; // window size.
-  int m_scale;
+  float m_scale;
   int m_f_size; // font size
 	int m_tw, m_th; //text size in pixels
   std::string m_text;
   std::vector<float> m_points;
+  std::shared_ptr<std::vector<double>> m_color;
 
   /**
     glyph infomation variable 
   **/
   int m_tex_w; // width of texture in pixels
   int m_tex_h; // height of texture in pixels
+  int m_line_height;
 
   struct {
     float ax;	// advance.x

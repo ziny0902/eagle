@@ -20,6 +20,7 @@ bool GlTextObject::calculate_texture_wh(FT_Face face)
 
   m_tex_w = 0;
   m_tex_h = 0;
+  m_line_height = 0;
   memset(m_glyph, 0, sizeof m_glyph);
   for(int i = 32; i < 128; i++) {
     if (FT_Load_Char(face, i, FT_LOAD_RENDER)) {
@@ -34,6 +35,7 @@ bool GlTextObject::calculate_texture_wh(FT_Face face)
     }
     roww += g->bitmap.width + 1;
     rowh = std::max(rowh, (int)g->bitmap.rows);
+    m_line_height = std::max(m_line_height, (int)g->bitmap.rows);
   }
 
   m_tex_w = std::max(m_tex_w, roww);
@@ -59,7 +61,7 @@ static void bitmap_dump(unsigned char *bitmap, int w, int h)
 
 #include <fontconfig/fontconfig.h>
 bool GlTextObject::load_freetype_info(
-size_t size
+  size_t size
 )
 {
   FT_Library ft;
@@ -167,13 +169,17 @@ void GlTextObject::init_vertex_data()
     float w = m_glyph[p].bw * m_scale;
     float h = m_glyph[p].bh * m_scale;
     float xpos = x + m_glyph[p].bl * m_scale;
-    float ypos = y - (h - m_glyph[p].bt) * m_scale;
+    float ypos = y - (h - m_glyph[p].bt * m_scale);
     float tx = m_glyph[p].tx;
     float ty = m_glyph[p].ty;
     float bw = m_glyph[p].bw;
     float bh = m_glyph[p].bh;
 
     /* Advance the cursor to the start of the next character */
+    if(p == '\n') { //if newline
+      x = 0;
+      y = y - m_line_height*m_scale;
+    }
 
     x += m_glyph[p].ax * m_scale;
     y += m_glyph[p].ay * m_scale;
@@ -269,15 +275,23 @@ GlTextObject::GlTextObject(std::string &&s)
 {
   m_sx = m_sy = m_tex_w = m_tex_h =0;
   m_shader = -1;
-  m_U_tex_id = -1;
   m_tex_resource = -1;
   m_text = s;
-  m_scale = 1;
+  m_scale = 0.5;
   m_f_size = DEFAULT_FONT_SIZE;
-  m_ww = -1;
-  m_wh = -1;
+  m_ww = 0;
+  m_wh = 0;
   m_tw = 0;
   m_th = 0;
+  m_color = nullptr;
+}
+
+GlTextObject::GlTextObject(std::string &&s, IniManager& ini)
+: GlTextObject(std::move(s))
+{
+  m_color = ini.get_double_list("GlText", "color");
+  double scale = ini.get_double("GlText", "scale");
+  if(scale != 0 ) m_scale = scale;
 }
 
 void GlTextObject::update_string
@@ -309,10 +323,23 @@ int GlTextObject::get_height()
   return m_th;
 }
 
-void GlTextObject::set_pos(int x, int y)
+void GlTextObject::set_pos(int x, int y, Gl::ResourceManager& manager)
 {
   m_sx = x;
-  m_sy = y;
+  m_sy = m_wh - y;
+  if(m_shader >= 0) {
+    glm::mat4 projection = glm::ortho(
+      0.0f, static_cast<GLfloat>(m_ww), 
+      0.0f, static_cast<GLfloat>(m_wh)
+    ) * glm::translate(
+      glm::mat4(1), glm::vec3(m_sx, m_sy, 0)
+    );
+    std::shared_ptr<Gl::Shader> shader_ptr 
+      = manager.get_shader_from_shader_id(m_shader);
+    shader_ptr->Bind();
+    shader_ptr->SetUniformMatrix4fv("projection", projection);
+    shader_ptr->UnBind();
+  }
 }
 
 // Instance of virtual function.
@@ -321,7 +348,6 @@ void GlTextObject::Update(steady_clock::time_point &t_c, Gl::ResourceManager& ma
   std::shared_ptr<Gl::Shader> shader_ptr 
     = manager.get_shader_from_shader_id(m_shader);
   shader_ptr->Bind();
-  shader_ptr->SetUniform4f("textColor", 0.0, 1.0, 1.0, 1);
 
   GLCall(glEnable(GL_CULL_FACE));
   GLCall(glEnable(GL_BLEND));
@@ -344,8 +370,10 @@ void GlTextObject::set_window_size(
   Gl::ResourceManager &manager 
 )
 {
+  int y = m_wh - m_sy;
   m_ww = w;
   m_wh = h;
+  m_sy = m_wh - y;
   //if shader has been already initialized.
   if(m_shader >= 0) {
     glm::mat4 projection = glm::ortho(
@@ -377,7 +405,17 @@ void GlTextObject::init_gl_buffer(
 
   unsigned int coord = shader_ptr->GetAttribLocation("coord");
   shader_ptr->SetUniform1i("tex", 0);
-  // m_U_tex_id = shader_ptr->GetUniformLocation("tex");
+  if(m_color == nullptr)
+    shader_ptr->SetUniform4f("textColor", 0.0, 0.5, 0.5, 1);
+  else{
+    shader_ptr->SetUniform4f(
+      "textColor",
+      (*m_color)[0],
+      (*m_color)[1],
+      (*m_color)[2],
+      1
+    );
+  }
   Gl::VertexBufferLayout text_layout;
   text_layout.Push<float>(4, coord);
 

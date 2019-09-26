@@ -2,6 +2,7 @@
 #include <epoxy/gl.h>
 #include <string>
 #include <gtkmm/application.h>
+#include <boost/format.hpp>
 #include "GtkWindow.h"
 
 using std::cerr;
@@ -335,8 +336,8 @@ bool GtkAppWindow::on_button(GdkEventButton* release_event)
   m_gl_area.make_current();
   m_gl_area.attach_buffers();
 
-	int viewport[4];
-	glGetIntegerv(GL_VIEWPORT, (int *)&viewport[0]);
+  int viewport[4];
+  glGetIntegerv(GL_VIEWPORT, (int *)&viewport[0]);
 
   float width = viewport[2];
   float height = viewport[3];
@@ -352,11 +353,16 @@ bool GtkAppWindow::on_button(GdkEventButton* release_event)
   std::cout << "normalize --> x: " << x << "; y: " << y <<std::endl;
 #endif
 
-  GLbyte color[4];
-  glReadPixels(release_event->x, viewport[3] - release_event->y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, color);
-
   float depths[36];
-	glReadPixels(release_event->x-3, viewport[3]-3 - release_event->y, 6, 6, GL_DEPTH_COMPONENT, GL_FLOAT, depths);
+  glReadPixels(
+    release_event->x-3,
+    viewport[3]-3 - release_event->y,
+    6,
+    6,
+    GL_DEPTH_COMPONENT,
+    GL_FLOAT,
+    depths
+  );
   z = 1;
   for(int i = 0; i < 36; i++){
     if(depths[i] != 1.0){
@@ -365,12 +371,30 @@ bool GtkAppWindow::on_button(GdkEventButton* release_event)
     }
   }
   if(z == 1) return true;
+  if(depths[12] != 1) {
+    z = depths[12];
+  }
   
-  // printf("color %02hhx%02hhx%02hhx%02hhx \n", color[0], color[1], color[2], color[3]);
-  // std::cout << "width: "<< viewport[2] << "  height:" << viewport[3] <<"  depth: " << z <<std::endl;
+#ifdef __DEBUG__
+std::cout << "width: "<< viewport[2] << "  height:" << viewport[3] <<"  depth: " << z <<std::endl;
+#endif
 
   m_gl_app->screen_2_world(x, y, z);
-  std::cout << "x: " << x << "; y: " << y << "; z: " << z << std::endl;
+  boost::format fmt
+      = boost::format("x: %s\ny: %s\nz: %s") % x % y % z;
+  std::string msg = fmt.str(); 
+
+#ifdef __DEBUG__
+  std::cout << msg << std::endl;
+#endif
+
+  m_gl_app->display_pixel_info(
+    release_event->x,
+    release_event->y,
+    msg 
+  );
+
+  gtk_gl_area_queue_render(m_gl_area.gobj());
 
   return true;
 }
