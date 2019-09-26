@@ -57,7 +57,7 @@ private:
   int m_ww, m_wh; // window size.
   float m_scale;
   int m_f_size; // font size
-	int m_tw, m_th; //text size in pixels
+  int m_tw, m_th; //text size in pixels
   std::string m_text;
   std::vector<float> m_points;
   std::shared_ptr<std::vector<double>> m_color;
@@ -70,17 +70,17 @@ private:
   int m_line_height;
 
   struct {
-    float ax;	// advance.x
-    float ay;	// advance.y
+    float ax; // advance.x
+    float ay; // advance.y
 
-    float bw;	// bitmap.width;
-    float bh;	// bitmap.height;
+    float bw; // bitmap.width;
+    float bh; // bitmap.height;
 
-    float bl;	// bitmap_left;
-    float bt;	// bitmap_top;
+    float bl; // bitmap_left;
+    float bt; // bitmap_top;
 
-    float tx;	// x offset of glyph in texture coordinates
-    float ty;	// y offset of glyph in texture coordinates
+    float tx; // x offset of glyph in texture coordinates
+    float ty; // y offset of glyph in texture coordinates
   } m_glyph[128];
 
   bool load_freetype_info(
