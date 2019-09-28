@@ -1,6 +1,6 @@
 #pragma once
 #include <chrono>
-#include "gl_resource_manager.h"
+#include <GLPP/gl_resource_manager.h>
 
 using namespace std::chrono;
 

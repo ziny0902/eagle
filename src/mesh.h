@@ -4,7 +4,7 @@
 #include <GLPP/glBuffer.h>
 #include <GLPP/vertex_arrays.h>
 #include <GLPP/shader.h>
-#include "gl_drawing_obj.h"
+#include <GLPP/gl_drawing_obj.h>
 
 typedef float (*func_xy)(float, float);
 

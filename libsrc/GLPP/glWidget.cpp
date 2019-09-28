@@ -1,5 +1,7 @@
 #include <GLPP/glWidget.h>
 
+using namespace Gl;
+
 GlWidget::GlWidget(
   std::shared_ptr<Gl::Shader> shader, 
   IniManager& ini,

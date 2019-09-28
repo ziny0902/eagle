@@ -3,8 +3,8 @@
 #include <chrono>
 #include <Geo/geometry_3d_object.h>
 #include <util/ini.h>
-#include "gl_resource_manager.h"
-#include "gl_drawing_obj.h"
+#include <GLPP/gl_resource_manager.h>
+#include <GLPP/gl_drawing_obj.h>
 
 using namespace std::chrono;
 

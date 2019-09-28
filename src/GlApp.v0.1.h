@@ -8,8 +8,8 @@
 #include "plot3d.h"
 #include "vector3d.h"
 #include "object3d.h"
-#include "gl_resource_manager.h"
-#include "gl_text.h"
+#include <GLPP/gl_resource_manager.h>
+#include <GLPP/gl_text.h>
 
 #define MAX_VAO_NUM   2
 

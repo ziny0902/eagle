@@ -18,9 +18,7 @@ add_executable(graph3d
                     mesh.cpp
                     plot3d.cpp
                     vector3d.cpp
-                    gl_resource_manager.cpp
                     object3d.cpp
-                    gl_text.cpp
                     )
 
 target_include_directories(graph3d PUBLIC 

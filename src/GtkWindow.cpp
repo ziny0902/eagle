@@ -199,6 +199,9 @@ if(v != nullptr&&v->size() >= 3)
 
 GtkAppWindow::~GtkAppWindow()
 {
+  // properly free openGL resource
+  m_gl_area.make_current();
+  m_gl_app = nullptr;
 } 
 
 void GtkAppWindow::on_lookat_changed()

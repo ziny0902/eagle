@@ -2,7 +2,7 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
-#include "gl_text.h"
+#include <GLPP/gl_text.h>
 #include <util/font_util.h>
 #include <GLPP/util.h>
 

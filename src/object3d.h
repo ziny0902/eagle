@@ -3,7 +3,7 @@
 #include <chrono>
 #include <string>
 #include <Geo/geometry_3d_object.h>
-#include "gl_drawing_obj.h"
+#include <GLPP/gl_drawing_obj.h>
 
 typedef glm::vec3 (*action_func)(float t);
 

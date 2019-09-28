@@ -1,5 +1,5 @@
 #include <iostream>
-#include "gl_resource_manager.h"
+#include <GLPP/gl_resource_manager.h>
 
 using namespace Gl;
 

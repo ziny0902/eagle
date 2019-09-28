@@ -4,6 +4,7 @@ project(prj)
 cmake_minimum_required(VERSION 3.13)
 
 find_package(PkgConfig)
+pkg_check_modules(FREETYPE freetype2)
 pkg_check_modules(GLIB glib-2.0)
 
 
@@ -14,10 +15,13 @@ ADD_LIBRARY( glpp STATIC
             shader.cpp 
             texture.cpp 
             glWidget.cpp
+            gl_text.cpp
+            gl_resource_manager.cpp
             )
 
 target_include_directories(glpp PUBLIC 
                           ${GLIB_INCLUDE_DIRS}
+                          ${FREETYPE_INCLUDE_DIRS}
                           ../../include
                           ) 
 

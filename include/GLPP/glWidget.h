@@ -6,6 +6,9 @@
 #include <Geo/geometry_3d_object.h>
 #include <util/ini.h>
 
+namespace Gl
+{
+
 class GlWidget{
 public:
   GlWidget(
@@ -43,3 +46,5 @@ private:
 
   geo::GeoModel3D data;
 };
+
+}
