@@ -2,7 +2,6 @@
 #include <epoxy/gl.h>
 #include <boost/geometry/algorithms/detail/assign_values.hpp>
 #include "axis.3D.h"
-#include "ini.h"
 
 void Axis3D::initialize_axis_data(
   IniManager &ini, 

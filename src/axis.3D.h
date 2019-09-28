@@ -2,9 +2,9 @@
 #include <vector>
 #include <chrono>
 #include <Geo/geometry_3d_object.h>
+#include <util/ini.h>
 #include "gl_resource_manager.h"
 #include "gl_drawing_obj.h"
-#include "ini.h"
 
 using namespace std::chrono;
 

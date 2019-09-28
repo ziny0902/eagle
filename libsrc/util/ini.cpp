@@ -1,6 +1,6 @@
 #include <glib/gprintf.h>
 #include <signal.h>
-#include "ini.h"
+#include <util/ini.h>
 
 IniManager::IniManager(std::string &&f)
 {

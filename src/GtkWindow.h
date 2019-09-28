@@ -2,7 +2,7 @@
 #define __GTK_WINDOWN_H__
 #include <gtkmm.h>
 #include "GlApp.v0.1.h"
-#include "ini.h"
+#include <util/ini.h>
 
 int GtkAppMain(int argc , char **argv);
 

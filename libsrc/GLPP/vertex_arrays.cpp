@@ -32,7 +32,7 @@ VertexArrays::VertexArrays(unsigned int cnt)
 
 VertexArrays::~VertexArrays()
 {
-  // GLCall(glDeleteVertexArrays(m_cnt, m_vaoID));
+  glDeleteVertexArrays(m_cnt, m_vaoID);
 }
 void VertexArrays::Bind(unsigned int idx)
 {

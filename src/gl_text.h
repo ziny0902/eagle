@@ -1,8 +1,8 @@
 #pragma once
 #include <vector>
 #include <string>
+#include <util/ini.h>
 #include "gl_drawing_obj.h"
-#include "ini.h"
 #include <ft2build.h>
 #include FT_FREETYPE_H
 

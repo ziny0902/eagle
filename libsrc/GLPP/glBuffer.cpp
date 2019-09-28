@@ -24,7 +24,7 @@ GlBuffer::GlBuffer(const void *data, unsigned int size, GLenum type)
 
 GlBuffer::~GlBuffer()
 {
-  // GLCall(glDeleteBuffers(1, &m_RendererId));
+  glDeleteBuffers(1, &m_RendererId);
 }
 
 void GlBuffer::SetGlBuffer(const void *data, unsigned int size, GLenum type)

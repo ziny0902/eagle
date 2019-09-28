@@ -20,7 +20,6 @@ add_executable(graph3d
                     vector3d.cpp
                     gl_resource_manager.cpp
                     object3d.cpp
-                    ini.cpp
                     gl_text.cpp
                     )
 

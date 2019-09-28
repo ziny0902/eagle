@@ -2,6 +2,7 @@
 #define __GL_APP_3D_H__
 #include <vector>
 #include <GLPP/texture.h>
+#include <util/ini.h>
 #include "axis.3D.h"
 #include "mesh.h"
 #include "plot3d.h"
@@ -9,7 +10,6 @@
 #include "object3d.h"
 #include "gl_resource_manager.h"
 #include "gl_text.h"
-#include "ini.h"
 
 #define MAX_VAO_NUM   2
 
