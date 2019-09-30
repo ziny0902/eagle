@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <epoxy/gl.h>
 #include <util/ini.h>
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -25,10 +26,11 @@ struct glyph_info_t {
 class GlCharacterTable{
 public:
   GlCharacterTable(IniManager& ini);
+  GlCharacterTable(){}
 
   inline int get_lineheight() { return m_line_height; }
 
-  inline const glyph_info_t* get_glyph_info(char c) {
+  inline glyph_info_t* const get_glyph_info(uint8_t c) {
     return &m_glyph[c];
   }
 

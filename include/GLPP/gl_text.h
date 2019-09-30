@@ -2,6 +2,7 @@
 #include <vector>
 #include <string>
 #include <util/ini.h>
+#include <GLPP/glFont.h>
 #include "gl_drawing_obj.h"
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -49,7 +50,6 @@ public:
 
 private:
   /* GL Resource start*/
-  GLuint m_tex_resource; // texture gl object
   int m_shader;
   /* GL Resource end.*/
   
@@ -62,30 +62,8 @@ private:
   std::vector<float> m_points;
   std::shared_ptr<std::vector<double>> m_color;
 
-  /**
-    glyph infomation variable 
-  **/
-  int m_tex_w; // width of texture in pixels
-  int m_tex_h; // height of texture in pixels
-  int m_line_height;
-
-  struct {
-    float ax; // advance.x
-    float ay; // advance.y
-
-    float bw; // bitmap.width;
-    float bh; // bitmap.height;
-
-    float bl; // bitmap_left;
-    float bt; // bitmap_top;
-
-    float tx; // x offset of glyph in texture coordinates
-    float ty; // y offset of glyph in texture coordinates
-  } m_glyph[128];
-
-  bool load_freetype_info(
-    size_t size
-  );
-  bool calculate_texture_wh(FT_Face face);
+  Gl::GlCharacterTable m_ch_font;
   void init_vertex_data();
+  void init();
+
 };
