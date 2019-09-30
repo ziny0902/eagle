@@ -71,6 +71,21 @@ const double IniManager::get_double
   return val;
 }
 
+const int IniManager::get_integer
+  (const std::string& group, const std::string& key)
+{
+  g_autoptr(GError) error = NULL;
+
+  gint val = g_key_file_get_integer(m_gkf, group.c_str(), key.c_str(), &error);
+  if (g_error_matches (error, G_KEY_FILE_ERROR, G_KEY_FILE_ERROR_KEY_NOT_FOUND))
+  {
+    g_warning ("Error finding key in key file: %s", error->message);
+    return 0;
+  }
+
+  return val;
+}
+
 const bool IniManager::get_boolean
     (const std::string& group, const std::string& key)
 {

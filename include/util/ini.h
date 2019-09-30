@@ -17,6 +17,8 @@ public:
     (const std::string& group, const std::string& key);
   const bool get_boolean
     (const std::string& group, const std::string& key);
+  const int get_integer
+    (const std::string& group, const std::string& key);
 
 private:
   GKeyFile* m_gkf; /* Notice we declared a pointer */
