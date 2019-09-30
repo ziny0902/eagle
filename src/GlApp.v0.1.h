@@ -46,8 +46,7 @@ private:
   Mesh m_mesh;
   Vector3d m_vector3d;
   Object3D m_figure;
-  GlTextObject m_text;
-  Gl::GlWidgetManager m_widget_manager;
+  Gl::GlTextObject m_text;
 
   glm::mat4 m_rotate;
   glm::mat4 m_projection;

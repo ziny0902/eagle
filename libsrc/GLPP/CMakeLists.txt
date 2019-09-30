@@ -19,6 +19,7 @@ ADD_LIBRARY( glpp STATIC
             gl_text.cpp
             gl_resource_manager.cpp
             glFont.cpp
+            glDrawableWidget.cpp
             )
 
 target_include_directories(glpp PUBLIC 

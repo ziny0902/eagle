@@ -1,6 +1,4 @@
 #include <algorithm>
-#include <ft2build.h>
-#include FT_FREETYPE_H
 
 #include <GLPP/gl_text.h>
 #include <util/font_util.h>
@@ -10,6 +8,8 @@
 
 // Maximum texture width
 #define MAXWIDTH 1024
+
+using namespace Gl;
 
 void GlTextObject::init_vertex_data()
 {
@@ -138,7 +138,8 @@ std::cout << "width: " << x << " ; "
 
 void GlTextObject::init()
 {
-  m_sx = m_sy = 0;
+  m_tx = m_ty = 0;
+  m_x = m_y = 0;
   m_shader = -1;
   m_scale = 0.5;
   m_ww = 0;
@@ -146,16 +147,15 @@ void GlTextObject::init()
   m_tw = 0;
   m_th = 0;
   m_color = nullptr;
+  m_margin = 8;
 }
 
-GlTextObject::GlTextObject(std::string &&s)
-{
-  init();
-  m_text = s;
-}
-
-GlTextObject::GlTextObject(std::string &&s, IniManager& ini)
-: m_ch_font(ini)
+GlTextObject::GlTextObject(
+  std::string &&s,
+  ResourceManager& res,
+  IniManager& ini
+) : GlDrawableWidget(res, ini)
+  , m_ch_font(ini)
 {
   init();
   m_text = s;
@@ -166,8 +166,9 @@ GlTextObject::GlTextObject(std::string &&s, IniManager& ini)
 
 void GlTextObject::update_string
 (
-  std::string &&s, 
-  Gl::ResourceManager& manager
+  int x,
+  int y,
+  std::string &&s
 )
 {
   m_text = s;
@@ -175,12 +176,18 @@ void GlTextObject::update_string
 
   int buffer_size = m_points.size()*sizeof(float);
 
-  manager.replace_gl_vbo_data(
+  m_res.replace_gl_vbo_data(
     gl_resource_id,
     (unsigned char *)&m_points[0],
     buffer_size,
     m_points.size()/4
   );
+  GlDrawableWidget::resize(
+    m_tw + 2*m_margin, 
+    m_th + 2*m_margin
+  );
+  set_pos(x, y);
+
 }
 
 int GlTextObject::get_width()
@@ -193,20 +200,22 @@ int GlTextObject::get_height()
   return m_th;
 }
 
-void GlTextObject::set_pos(int x, int y, Gl::ResourceManager& manager)
+void GlTextObject::set_pos(int x, int y)
 {
   int l_height = m_ch_font.get_lineheight();
-  m_sx = x;
-  m_sy = m_wh - y - l_height*m_scale;
+  m_tx = x;
+  m_x = x - m_margin;
+  m_ty = m_wh - y - l_height*m_scale;
+  m_y = m_wh - y - m_th - m_margin;
   if(m_shader >= 0) {
     glm::mat4 projection = glm::ortho(
       0.0f, static_cast<GLfloat>(m_ww), 
       0.0f, static_cast<GLfloat>(m_wh)
     ) * glm::translate(
-      glm::mat4(1), glm::vec3(m_sx, m_sy, 0)
+      glm::mat4(1), glm::vec3(m_tx, m_ty, 0)
     );
     std::shared_ptr<Gl::Shader> shader_ptr 
-      = manager.get_shader_from_shader_id(m_shader);
+      = m_res.get_shader_from_shader_id(m_shader);
     shader_ptr->Bind();
     shader_ptr->SetUniformMatrix4fv("projection", projection);
     shader_ptr->UnBind();
@@ -214,10 +223,12 @@ void GlTextObject::set_pos(int x, int y, Gl::ResourceManager& manager)
 }
 
 // Instance of virtual function.
-void GlTextObject::Update(steady_clock::time_point &t_c, Gl::ResourceManager& manager)
+void GlTextObject::update()
 {
+  GlDrawableWidget::update();
+
   std::shared_ptr<Gl::Shader> shader_ptr 
-    = manager.get_shader_from_shader_id(m_shader);
+    = m_res.get_shader_from_shader_id(m_shader);
   shader_ptr->Bind();
 
   GLCall(glEnable(GL_CULL_FACE));
@@ -226,10 +237,10 @@ void GlTextObject::Update(steady_clock::time_point &t_c, Gl::ResourceManager& ma
 
   GLuint tex_resource = m_ch_font.get_texture_name();
   GLCall(glActiveTexture(GL_TEXTURE0));
-  manager.resource_bind(gl_resource_id);
+  m_res.resource_bind(gl_resource_id);
   GLCall(glBindTexture(GL_TEXTURE_2D, tex_resource));
 
-  manager.gl_window_update(gl_resource_id);
+  m_res.gl_window_update(gl_resource_id);
 
   GLCall(glBindTexture(GL_TEXTURE_2D, 0));
   GLCall(glDisable(GL_BLEND));
@@ -239,41 +250,36 @@ void GlTextObject::Update(steady_clock::time_point &t_c, Gl::ResourceManager& ma
 
 void GlTextObject::set_window_size(
   int w, 
-  int h, 
-  Gl::ResourceManager &manager 
+  int h
 )
 {
-  int y = m_wh - m_sy;
+  m_ty = h - (m_wh - m_ty);
+  m_y = h - (m_wh - m_y);
   m_ww = w;
   m_wh = h;
-  m_sy = m_wh - y;
   //if shader has been already initialized.
   if(m_shader >= 0) {
     glm::mat4 projection = glm::ortho(
       0.0f, static_cast<GLfloat>(m_ww), 
       0.0f, static_cast<GLfloat>(m_wh)
     ) * glm::translate(
-      glm::mat4(1), glm::vec3(m_sx, m_sy, 0)
+      glm::mat4(1), glm::vec3(m_tx, m_ty, 0)
     );
     std::shared_ptr<Gl::Shader> shader_ptr 
-      = manager.get_shader_from_shader_id(m_shader);
+      = m_res.get_shader_from_shader_id(m_shader);
     shader_ptr->Bind();
     shader_ptr->SetUniformMatrix4fv("projection", projection);
     shader_ptr->UnBind();
   }
 }
 
-void GlTextObject::init_gl_buffer(
-  Gl::ResourceManager &manager, 
-  Gl::VertexBufferLayout& layout,
-  int shader_id
-)
+void GlTextObject::init_gl_buffer()
 {
 
-  m_shader = manager.request_gl_shader_create("shader/textv.glsl", "shader/textf.glsl");
-  int vertArray_id = manager.request_gl_alloc_vertexArray();
+  m_shader = m_res.request_gl_shader_create("shader/textv.glsl", "shader/textf.glsl");
+  int vertArray_id = m_res.request_gl_alloc_vertexArray();
 
-  std::shared_ptr<Gl::Shader> shader_ptr = manager.get_shader_from_shader_id(m_shader);
+  std::shared_ptr<Gl::Shader> shader_ptr = m_res.get_shader_from_shader_id(m_shader);
   shader_ptr->Bind();
 
   unsigned int coord = shader_ptr->GetAttribLocation("coord");
@@ -293,6 +299,10 @@ void GlTextObject::init_gl_buffer(
   text_layout.Push<float>(4, coord);
 
   init_vertex_data();
+  GlDrawableWidget::resize(
+    m_tw + 2*m_margin, 
+    m_th + 2*m_margin
+  );
 
   int buffer_size = m_points.size();
   if( buffer_size == 0 ) {
@@ -305,7 +315,7 @@ void GlTextObject::init_gl_buffer(
 
   }
 
-  gl_resource_id = manager.request_gl_vbo_data(
+  gl_resource_id = m_res.request_gl_vbo_data(
         (unsigned char *)&m_points[0],
         buffer_size,
         buffer_size/(4*sizeof(float)),
@@ -317,4 +327,5 @@ void GlTextObject::init_gl_buffer(
         );
 
   shader_ptr->UnBind();
+
 }

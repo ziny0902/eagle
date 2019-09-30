@@ -31,8 +31,7 @@ GlApp3D::GlApp3D(IniManager& ini) :
   , m_rotate(glm::mat4(1))
   , m_model(glm::mat4(1))
   , m_figure("BOX(1.5 1.5 0.0, 2.0 2.0 1.0)")
-  , m_text("abcdefghijklm\nnopqrstuvwxyz", ini)
-  , m_widget_manager(m_manager, ini)
+  , m_text("abcdefghijklm\nnopqrstuvwxyz", m_manager, ini)
 
 {
   m_w = 600;
@@ -56,7 +55,10 @@ GlApp3D::GlApp3D(IniManager& ini) :
   m_vector3d.add_vector({2.0, -2.0, 3},{1.0, -1.0, 2});
   m_vector3d.add_vector({-2.0, -2.0, 3},{-1.0, -1.0, 2});
 
-  m_text.set_pos(100, 100, m_manager);
+  m_text.init_gl_buffer();
+  m_text.set_pos(100, 100);
+
+  ChangeLookAt(0.0, 0.0, 0.0);
 }
 
 GlApp3D::~GlApp3D()
@@ -67,127 +69,121 @@ GlApp3D::~GlApp3D()
 #include <dlfcn.h>
 void GlApp3D::StartUp(IniManager &ini)
 {
-  std::shared_ptr<Gl::Shader> shader_ptr = m_manager.get_shader_from_shader_id(m_shader);
+	std::shared_ptr<Gl::Shader> shader_ptr = m_manager.get_shader_from_shader_id(m_shader);
 
-  shader_ptr->Bind();
-  unsigned int position_id = shader_ptr->GetAttribLocation("position");
-  shader_ptr->UnBind();
+	shader_ptr->Bind();
+	unsigned int position_id = shader_ptr->GetAttribLocation("position");
+	shader_ptr->UnBind();
 
-  Gl::VertexBufferLayout layout;
-  layout.Push<float> (3, position_id);
+	Gl::VertexBufferLayout layout;
+	layout.Push<float> (3, position_id);
 
-  m_x_axis.init_gl_buffer(m_manager, layout, m_shader);
-  m_y_axis.init_gl_buffer(m_manager, layout, m_shader);
-  m_z_axis.init_gl_buffer(m_manager, layout, m_shader);
+	m_x_axis.init_gl_buffer(m_manager, layout, m_shader);
+	m_y_axis.init_gl_buffer(m_manager, layout, m_shader);
+	m_z_axis.init_gl_buffer(m_manager, layout, m_shader);
 
 // initialize class from config file.
-  const std::shared_ptr<std::string> lib_path_str = ini.get_string("GlApp", "graph_lib_path");
-  const std::shared_ptr<std::string> plot3d_fn_str = ini.get_string("GlApp", "plot3d_func");
-  const std::shared_ptr<std::string> figure_fn_str = ini.get_string("GlApp", "figure_func");
-  const std::shared_ptr<std::string> mesh_fn_str =  ini.get_string("GlApp", "mesh_func");
-  std::shared_ptr<std::vector<double>> mesh_range 
-    = ini.get_double_list("GlApp", "mesh_range");
-  if(mesh_range != nullptr && mesh_range->size() != 4)
-  {
-    mesh_range = nullptr;
-  }
-  std::shared_ptr<std::vector<double>> plot3d_range 
-    = ini.get_double_list("GlApp", "plot3d_range");
-  if(plot3d_range != nullptr && plot3d_range->size() != 3)
-  {
-    plot3d_range = nullptr;
-  }
+	const std::shared_ptr<std::string> lib_path_str = ini.get_string("GlApp", "graph_lib_path");
+	const std::shared_ptr<std::string> plot3d_fn_str = ini.get_string("GlApp", "plot3d_func");
+	const std::shared_ptr<std::string> figure_fn_str = ini.get_string("GlApp", "figure_func");
+	const std::shared_ptr<std::string> mesh_fn_str =  ini.get_string("GlApp", "mesh_func");
+	std::shared_ptr<std::vector<double>> mesh_range 
+		= ini.get_double_list("GlApp", "mesh_range");
+	if(mesh_range != nullptr && mesh_range->size() != 4)
+	{
+		mesh_range = nullptr;
+	}
+	std::shared_ptr<std::vector<double>> plot3d_range 
+		= ini.get_double_list("GlApp", "plot3d_range");
+	if(plot3d_range != nullptr && plot3d_range->size() != 3)
+	{
+		plot3d_range = nullptr;
+	}
 
-  m_mesh_enabled = ini.get_boolean("GlApp", "mesh_enabled");
-  m_plot3d_enabled = ini.get_boolean("GlApp", "plot3d_enabled");
-  m_figure_enabled = ini.get_boolean("GlApp", "figure_enabled");
-  m_vector_enabled = ini.get_boolean("GlApp", "vector_enabled");
+	m_mesh_enabled = ini.get_boolean("GlApp", "mesh_enabled");
+	m_plot3d_enabled = ini.get_boolean("GlApp", "plot3d_enabled");
+	m_figure_enabled = ini.get_boolean("GlApp", "figure_enabled");
+	m_vector_enabled = ini.get_boolean("GlApp", "vector_enabled");
 // end initialization
-  
-  glm::vec3 (*plot3d_fn)(float) = nullptr;
-  glm::vec3 (*figure_fn)(float) = nullptr;
-  float (*mesh_fn)(float, float) = nullptr;
+	
+	glm::vec3 (*plot3d_fn)(float) = nullptr;
+	glm::vec3 (*figure_fn)(float) = nullptr;
+	float (*mesh_fn)(float, float) = nullptr;
 
 // load dynamic function.
 {
-  if(lib_path_str == nullptr) {
-    std::cout << "not found lib path value in config file\n";
-    exit(-1);
-  }
-  void *lib_handle = dlopen(lib_path_str->c_str(), RTLD_LAZY);
-  if (!lib_handle)
-  {
-    std::cout << "can't load libgraphf.so : " << dlerror() << std::endl;
-    exit(-1);
-  }
+	if(lib_path_str == nullptr) {
+		std::cout << "not found lib path value in config file\n";
+		exit(-1);
+	}
+	void *lib_handle = dlopen(lib_path_str->c_str(), RTLD_LAZY);
+	if (!lib_handle)
+	{
+		std::cout << "can't load libgraphf.so : " << dlerror() << std::endl;
+		exit(-1);
+	}
 
-  if(plot3d_fn_str != nullptr)
-    plot3d_fn =  (glm::vec3(*)(float))dlsym(lib_handle, plot3d_fn_str->c_str());
-  if(figure_fn_str != nullptr)
-    figure_fn =  (glm::vec3(*)(float))dlsym(lib_handle, figure_fn_str->c_str());
-  if(mesh_fn_str != nullptr)
-    mesh_fn =  (float(*)(float, float))dlsym(lib_handle, mesh_fn_str->c_str());
+	if(plot3d_fn_str != nullptr)
+		plot3d_fn =  (glm::vec3(*)(float))dlsym(lib_handle, plot3d_fn_str->c_str());
+	if(figure_fn_str != nullptr)
+		figure_fn =  (glm::vec3(*)(float))dlsym(lib_handle, figure_fn_str->c_str());
+	if(mesh_fn_str != nullptr)
+		mesh_fn =  (float(*)(float, float))dlsym(lib_handle, mesh_fn_str->c_str());
 
-  char *error;
-  if ((error = dlerror()) != NULL)  
-  {
-    std::cout << error << std::endl;
-    exit(-1);
-  }
-  dlclose(lib_handle);
+	char *error;
+	if ((error = dlerror()) != NULL)  
+	{
+		std::cout << error << std::endl;
+		exit(-1);
+	}
+	dlclose(lib_handle);
 }
 
-  if(m_mesh_enabled && mesh_fn != nullptr){
-    if(mesh_range != nullptr){
-      m_mesh.regfunc(
-        {(float)(*mesh_range)[0], (float)(*mesh_range)[1]}, 
-        {(float)(*mesh_range)[2], (float)(*mesh_range)[3]}, 
-        mesh_fn
-      );
-    }
-    m_mesh.init_gl_buffer(m_manager, layout, m_shader);
-  }
-  else {
-    m_mesh_enabled = false;
-  }
+	if(m_mesh_enabled && mesh_fn != nullptr){
+		if(mesh_range != nullptr){
+			m_mesh.regfunc(
+				{(float)(*mesh_range)[0], (float)(*mesh_range)[1]}, 
+				{(float)(*mesh_range)[2], (float)(*mesh_range)[3]}, 
+				mesh_fn
+			);
+		}
+		m_mesh.init_gl_buffer(m_manager, layout, m_shader);
+	}
+	else {
+		m_mesh_enabled = false;
+	}
 
-  if(m_plot3d_enabled && plot3d_fn != nullptr && plot3d_range != nullptr) {
-    m_plot3d.regfunc(plot3d_fn);
-    m_plot3d.sampling(
-      (float)(*plot3d_range)[0], 
-      (float)(*plot3d_range)[1], 
-      (float)(*plot3d_range)[2]
-    );
-    m_plot3d.init_gl_buffer(m_manager, layout, m_shader);
-    // m_plot3d.activate_realtime();
-  }
-  else{
-    m_plot3d_enabled = false;
-  }
+	if(m_plot3d_enabled && plot3d_fn != nullptr && plot3d_range != nullptr) {
+		m_plot3d.regfunc(plot3d_fn);
+		m_plot3d.sampling(
+			(float)(*plot3d_range)[0], 
+			(float)(*plot3d_range)[1], 
+			(float)(*plot3d_range)[2]
+		);
+		m_plot3d.init_gl_buffer(m_manager, layout, m_shader);
+		// m_plot3d.activate_realtime();
+	}
+	else{
+		m_plot3d_enabled = false;
+	}
 
-  if(m_vector_enabled) {
-    m_vector3d.init_gl_buffer(m_manager, layout, m_shader);
-  }
+	if(m_vector_enabled) {
+		m_vector3d.init_gl_buffer(m_manager, layout, m_shader);
+	}
 
-  if(m_figure_enabled && figure_fn != nullptr) {
-    m_figure.init_gl_buffer(m_manager, layout, m_shader);
-    m_figure.regfunc(figure_fn);
-    m_figure.action_start();
-  }
-  else {
-    m_figure_enabled = false;
-  }
+	if(m_figure_enabled && figure_fn != nullptr) {
+		m_figure.init_gl_buffer(m_manager, layout, m_shader);
+		m_figure.regfunc(figure_fn);
+		m_figure.action_start();
+	}
+	else {
+		m_figure_enabled = false;
+	}
 
-  m_text.init_gl_buffer(m_manager, layout, m_shader);
+	m_text.init_gl_buffer();
 
-  m_widget_manager.resize(
-    m_text.get_width(), 
-    m_text.get_height()
-  );
-
-  ChangeLookAt(0.0, 0.0, 0.0);
+	ChangeLookAt(0.0, 0.0, 0.0);
 }
-
 
 void GlApp3D::ChangeLookAt(float x, float y, float z)
 {
@@ -263,8 +259,7 @@ void GlApp3D::set_window_size(int w, int h)
 {
   m_w = w;
   m_h = h;
-  m_text.set_window_size(w, h, m_manager);
-  m_widget_manager.set_window_size(w, h);
+  m_text.set_window_size(w, h);
 }
 
 static unsigned long getTick(steady_clock::time_point t_p)
@@ -313,23 +308,12 @@ void GlApp3D::Draw()
   }
 
   shader_ptr->UnBind();
-  m_widget_manager.update();
-  m_text.Update(t_p, m_manager);
+  m_text.update();
 
 	glFlush();
 }
 void GlApp3D::display_pixel_info(int x, int y, std::string &s)
 {
-  m_text.set_pos(x, y, m_manager);
-  m_text.update_string(std::move(s), m_manager);
-  m_widget_manager.move(
-    x-4, 
-    (m_h) - (y+m_text.get_height()+12)
-  );
-  m_widget_manager.resize(
-    m_text.get_width()+8, 
-    m_text.get_height()+16
-  );
-
+  m_text.update_string(x, y, std::move(s));
 }
 
