@@ -79,14 +79,13 @@ void GlWidgetManager::update()
       va_id
     );
 
-    va_id = m_res.request_gl_alloc_vertexArray();
     data = (unsigned char *)get_vertex_fg_data(); 
     bytes = get_vertex_data_fg_bytes();
     m_element_fg = m_res.request_gl_vbo_data(
       data,
       bytes,
-      4,
-      GL_ARRAY_BUFFER,
+      bytes/sizeof(unsigned short),
+      GL_ELEMENT_ARRAY_BUFFER,
       widget_layout,
       GL_LINE_LOOP,
       m_shader_id,

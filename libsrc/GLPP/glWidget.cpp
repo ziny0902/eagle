@@ -73,7 +73,7 @@ int GlWidget::get_vertex_data_bg_bytes()
 
 int GlWidget::get_vertex_data_fg_bytes()
 {
-  return m_fg_data.size()*sizeof(float);
+  return m_fg_data.size()*sizeof(unsigned short);
 }
 
 void GlWidget::move(const int x, const int y)
@@ -105,16 +105,10 @@ std::cout << m_width << " "  << m_height << std::endl;
   APPEND(m_bg_data, glm::vec3(w, h, 0));
 
   m_fg_data.clear();
-#ifdef __DEBUG__
   m_fg_data.push_back(1);
   m_fg_data.push_back(0);
   m_fg_data.push_back(5);
   m_fg_data.push_back(2);
-#endif
-  APPEND(m_fg_data, glm::vec3(0, 0, 0));
-  APPEND(m_fg_data, glm::vec3(0, h, 0));
-  APPEND(m_fg_data, glm::vec3(w, h, 0));
-  APPEND(m_fg_data, glm::vec3(w, 0, 0));
 
 }
 

@@ -71,7 +71,7 @@ protected:
   // geo::GeoModel3D m_bg_data;
   // geo::GeoModel3D m_fg_data;
   std::vector<float> m_bg_data; 
-  std::vector<float> m_fg_data; 
+  std::vector<unsigned short> m_fg_data; 
 
   GlWidget *m_parent;
   int m_id;
