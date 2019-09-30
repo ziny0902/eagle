@@ -3,7 +3,7 @@
 namespace Gl
 {
 
-class GlTextWidget{
+class GlTextWidget : GlWidget{
 public:
 
 private:

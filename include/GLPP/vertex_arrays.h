@@ -5,7 +5,7 @@
 #include <GLPP/util.h>
 #include <GLPP/glBuffer.h>
 
-#define MAX_VAO_ID  5
+#define MAX_VAO_ID  10 
 
 namespace Gl
 {

@@ -13,7 +13,7 @@ struct ResourceElement{
   unsigned int vertexArray_idx;
   GLenum mode;
   GLenum buffer_type;
-	std::shared_ptr<Gl::GlBuffer> vbo;
+  std::shared_ptr<Gl::GlBuffer> vbo;
   std::shared_ptr<Gl::Shader> shader;
 };
 

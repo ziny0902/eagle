@@ -26,6 +26,7 @@ public:
   float *getArray() { return &m_model[0][0]; }
   void getVector(std::vector<float> & v);
   void append(point_3d const & p);
+  void clear();
   void append(boost::geometry::model::segment<point_3d> const & seg);
   void add_arrow_head(ArrowDir, float);
   int size();

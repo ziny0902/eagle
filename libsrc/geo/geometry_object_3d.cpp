@@ -153,6 +153,10 @@ void GeoModel3D::append(boost::geometry::model::segment<point_3d> const & seg)
   boost::geometry::append(m_model, lstr); 
 }
 
+void GeoModel3D::clear()
+{
+  boost::geometry::clear(m_model); 
+}
 
 #include <boost/units/io.hpp>
 #include <boost/units/systems/si/plane_angle.hpp>

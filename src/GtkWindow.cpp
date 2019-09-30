@@ -189,6 +189,8 @@ if(v != nullptr&&v->size() >= 3)
   &GtkAppWindow::on_resize));
   m_gl_area.signal_button_release_event().connect(sigc::mem_fun(*this,
   &GtkAppWindow::on_button));
+  m_gl_area.signal_button_press_event().connect(sigc::mem_fun(*this,
+  &GtkAppWindow::on_button));
 
 // openGL depth buffer enable
   m_gl_area.set_has_depth_buffer(true);

@@ -81,14 +81,13 @@ bool GlTextObject::load_freetype_info(
   calculate_texture_wh(face);
 
   /* Create a texture that will be used to hold all ASCII glyphs */
-  GLCall(glActiveTexture(GL_TEXTURE0));
   GLCall(glGenTextures(1, &m_tex_resource));
   GLCall(glBindTexture(GL_TEXTURE_2D, m_tex_resource));
 
   /* We require 1 byte alignment when uploading texture data */
   GLCall(glPixelStorei(GL_UNPACK_ALIGNMENT, 1));
 
-  GLCall(glTexImage2D(
+    GLCall(glTexImage2D(
     GL_TEXTURE_2D, 
     0, 
     GL_RED, 
@@ -158,6 +157,8 @@ bool GlTextObject::load_freetype_info(
 
 void GlTextObject::init_vertex_data()
 {
+  float text_h = 0;
+  float text_w = 0;
   float x = 0;
   float y = 0;
   /* Loop through all characters */
@@ -177,6 +178,8 @@ void GlTextObject::init_vertex_data()
 
     /* Advance the cursor to the start of the next character */
     if(p == '\n') { //if newline
+      text_w = std::max(text_w, x);
+      text_h += m_line_height*m_scale;
       x = 0;
       y = y - m_line_height*m_scale;
     }
@@ -263,8 +266,10 @@ void GlTextObject::init_vertex_data()
     std::cout << std::endl;
 #endif
   }
-  m_tw = (int) x;
-  m_th = (int) y;
+  text_w = std::max(text_w, x);
+  text_h += m_line_height*m_scale;
+  m_tw = (int) text_w;
+  m_th = (int) text_h;
 #ifdef __DEBUG__
 std::cout << "width: " << x << " ; "
 << "height: " << y << "\n"; 
@@ -326,7 +331,7 @@ int GlTextObject::get_height()
 void GlTextObject::set_pos(int x, int y, Gl::ResourceManager& manager)
 {
   m_sx = x;
-  m_sy = m_wh - y;
+  m_sy = m_wh - y - m_line_height*m_scale;
   if(m_shader >= 0) {
     glm::mat4 projection = glm::ortho(
       0.0f, static_cast<GLfloat>(m_ww), 
@@ -352,6 +357,7 @@ void GlTextObject::Update(steady_clock::time_point &t_c, Gl::ResourceManager& ma
   GLCall(glEnable(GL_CULL_FACE));
   GLCall(glEnable(GL_BLEND));
   GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));  
+
   GLCall(glActiveTexture(GL_TEXTURE0));
   manager.resource_bind(gl_resource_id);
   GLCall(glBindTexture(GL_TEXTURE_2D, m_tex_resource));

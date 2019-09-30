@@ -32,10 +32,12 @@ GlApp3D::GlApp3D(IniManager& ini) :
   , m_model(glm::mat4(1))
   , m_figure("BOX(1.5 1.5 0.0, 2.0 2.0 1.0)")
   , m_text("abcdefghijklm\nnopqrstuvwxyz", ini)
+  , m_widget_manager(m_manager, ini)
 
 {
   m_w = 600;
   m_h = 600;
+
 
   m_shader = m_manager.request_gl_shader_create("shader/vertex.glsl", "shader/fragment.glsl");
 
@@ -178,6 +180,11 @@ void GlApp3D::StartUp(IniManager &ini)
 
   m_text.init_gl_buffer(m_manager, layout, m_shader);
 
+  m_widget_manager.resize(
+    m_text.get_width(), 
+    m_text.get_height()
+  );
+
   ChangeLookAt(0.0, 0.0, 0.0);
 }
 
@@ -257,6 +264,7 @@ void GlApp3D::set_window_size(int w, int h)
   m_w = w;
   m_h = h;
   m_text.set_window_size(w, h, m_manager);
+  m_widget_manager.set_window_size(w, h);
 }
 
 static unsigned long getTick(steady_clock::time_point t_p)
@@ -305,12 +313,23 @@ void GlApp3D::Draw()
   }
 
   shader_ptr->UnBind();
+  m_widget_manager.update();
   m_text.Update(t_p, m_manager);
+
 	glFlush();
 }
 void GlApp3D::display_pixel_info(int x, int y, std::string &s)
 {
   m_text.set_pos(x, y, m_manager);
   m_text.update_string(std::move(s), m_manager);
+  m_widget_manager.move(
+    x-4, 
+    (m_h) - (y+m_text.get_height()+12)
+  );
+  m_widget_manager.resize(
+    m_text.get_width()+8, 
+    m_text.get_height()+16
+  );
+
 }
 

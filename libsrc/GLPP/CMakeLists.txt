@@ -15,6 +15,7 @@ ADD_LIBRARY( glpp STATIC
             shader.cpp 
             texture.cpp 
             glWidget.cpp
+            glWidgetManager.cpp
             gl_text.cpp
             gl_resource_manager.cpp
             )

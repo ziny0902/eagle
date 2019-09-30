@@ -179,8 +179,9 @@ void ResourceManager::resource_unbind(unsigned short element_id)
     return;
   }
   std::shared_ptr<ResourceElement> e = m_element_list[element_id];
-  e->shader->UnBind();
-  m_vertArray.UnBind();
+
   e->vbo->UnBind();
+  m_vertArray.UnBind();
+  e->shader->UnBind();
   
 }
