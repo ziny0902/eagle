@@ -9,7 +9,6 @@
 #include "vector3d.h"
 #include "object3d.h"
 #include <GLPP/gl_resource_manager.h>
-#include <GLPP/gl_text.h>
 #include "glWidgetWindow.h"
 
 #define MAX_VAO_NUM   2
@@ -47,10 +46,7 @@ private:
   Mesh m_mesh;
   Vector3d m_vector3d;
   Object3D m_figure;
-  // Gl::GlCharacterTable m_ch_table;
-  // Gl::GlTextObject m_text;
   glWidgetWindow m_gl_window;
-
 
   glm::mat4 m_rotate;
   glm::mat4 m_projection;

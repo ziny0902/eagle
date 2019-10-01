@@ -9,5 +9,5 @@ uniform vec4 textColor;
 void main()
 {    
 
-		color = vec4(1.0, 1.0, 1.0, texture2D(tex, TexCoords).r) * textColor;
+  color = vec4(1.0, 1.0, 1.0, texture2D(tex, TexCoords).r) * textColor;
 } 
