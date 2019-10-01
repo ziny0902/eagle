@@ -19,6 +19,7 @@ add_executable(graph3d
                     plot3d.cpp
                     vector3d.cpp
                     object3d.cpp
+                    glWidgetWindow.cpp
                     )
 
 target_include_directories(graph3d PUBLIC 

@@ -34,7 +34,7 @@ void GlBuffer::SetGlBuffer(const void *data, unsigned int size, GLenum type)
   Bind();
   bool ret = AddData(data, size );
   if(ret == false){ 
-    AddCapacity(type);
+    AddCapacity(type, size);
     ret = AddData(data, size );
   }
 }
@@ -48,7 +48,7 @@ void GlBuffer::SetGlSubBuffer(const void *data, unsigned int size, unsigned int 
 bool GlBuffer::AddData(const void *data, unsigned int size )
 {
   if(m_size < (m_data_cnt + size)) {
-    std::cout << "("<< m_data_cnt << ")" << " not enough buffer" << std::endl;
+    std::cout << "("<< m_size << ")" << " not enough buffer" << std::endl;
     return false;
   }
   Bind();

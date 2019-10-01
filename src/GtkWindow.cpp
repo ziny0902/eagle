@@ -337,7 +337,12 @@ bool GtkAppWindow::on_glarea_render(const Glib::RefPtr<Gdk::GLContext>& ctx)
 }
 bool GtkAppWindow::on_button(GdkEventButton* release_event)
 {
-  if(release_event->type != GDK_BUTTON_RELEASE) return true;
+  if(release_event->type == GDK_BUTTON_RELEASE) {
+    m_gl_app->mouse_release(release_event->x, release_event->y);
+    gtk_gl_area_queue_render(m_gl_area.gobj());
+    return true;
+  }
+
   m_gl_area.make_current();
   m_gl_area.attach_buffers();
 

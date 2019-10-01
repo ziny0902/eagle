@@ -4,7 +4,6 @@
 #include <string>
 #include <GLPP/glWidget.h>
 #include <util/ini.h>
-#include <GLPP/glFont.h>
 #include <GLPP/gl_resource_manager.h>
 #include <GLPP/glDrawableWidget.h>
 
@@ -17,7 +16,8 @@ public:
   GlTextObject(
     std::string &&s,
     ResourceManager& res,
-    IniManager& ini
+    IniManager& ini,
+    Gl::GlCharacterTable &_ch_font
   );
   void update_string
   (
@@ -30,17 +30,13 @@ public:
   int get_height();
   void set_pos(int x, int y);
   void set_scale(float scale);
-  void set_font_size(size_t size);
+  // virtual void set_font_size(size_t size);
 
   // for othogonal projection.
   void set_window_size(
     int w, 
     int h
   );
-
-  // Instance of virtual function.
-
-  void init_gl_buffer();
 
 private:
   /* GL Resource start*/
@@ -57,9 +53,9 @@ private:
   std::vector<float> m_points;
   std::shared_ptr<std::vector<double>> m_color;
 
-  Gl::GlCharacterTable m_ch_font;
   void init_vertex_data();
   void init();
+  void init_gl_buffer();
 };
 
 }

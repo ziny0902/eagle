@@ -40,7 +40,7 @@ public:
   void set_widget_fg(glm::vec4& color);
   inline bool is_realized() {return m_is_realize;}
   inline bool is_hide() { return m_is_hide; }
-  inline void set_window_size(int w, int h)
+  virtual void set_window_size(int w, int h)
   {
     m_ww = w;
     m_wh = h;

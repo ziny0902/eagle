@@ -10,7 +10,7 @@
 #include "object3d.h"
 #include <GLPP/gl_resource_manager.h>
 #include <GLPP/gl_text.h>
-#include <GLPP/glWidgetManager.h>
+#include "glWidgetWindow.h"
 
 #define MAX_VAO_NUM   2
 
@@ -27,6 +27,7 @@ public:
   void ModelTranslate(float x, float y, float z);
   void screen_2_world(float &x, float &y, float &z);
   void display_pixel_info(int x, int y, std::string &s);
+  void mouse_release(int x, int y);
 
 private:
   int m_w, m_h;
@@ -46,7 +47,10 @@ private:
   Mesh m_mesh;
   Vector3d m_vector3d;
   Object3D m_figure;
-  Gl::GlTextObject m_text;
+  // Gl::GlCharacterTable m_ch_table;
+  // Gl::GlTextObject m_text;
+  glWidgetWindow m_gl_window;
+
 
   glm::mat4 m_rotate;
   glm::mat4 m_projection;

@@ -4,9 +4,11 @@ using namespace Gl;
 
 GlDrawableWidget::GlDrawableWidget(
   ResourceManager& res,
-  IniManager& ini
+  IniManager& ini,
+  Gl::GlCharacterTable &_ch_font
 )
   : m_res(res)
+  , m_ch_font(_ch_font)
 {
   std::shared_ptr<std::string> vs
     = ini.get_string("Widget", "vertex_shader");

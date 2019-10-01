@@ -22,6 +22,7 @@ void GlTextObject::init_vertex_data()
   int tex_w, tex_h;
   int l_height = m_ch_font.get_lineheight();
   m_ch_font.get_texture_size(tex_w, tex_h);
+
   m_points.clear();
   for( std::string::size_type i = 0; i < m_text.size(); i++){ 
     p = m_text[i];
@@ -153,15 +154,16 @@ void GlTextObject::init()
 GlTextObject::GlTextObject(
   std::string &&s,
   ResourceManager& res,
-  IniManager& ini
-) : GlDrawableWidget(res, ini)
-  , m_ch_font(ini)
+  IniManager& ini,
+  Gl::GlCharacterTable &_ch_font
+) : GlDrawableWidget(res, ini, _ch_font)
 {
   init();
   m_text = s;
   m_color = ini.get_double_list("GlText", "color");
   double scale = ini.get_double("GlText", "scale");
   if(scale != 0 ) m_scale = scale;
+  init_gl_buffer();
 }
 
 void GlTextObject::update_string

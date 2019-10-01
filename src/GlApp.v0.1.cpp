@@ -31,7 +31,9 @@ GlApp3D::GlApp3D(IniManager& ini) :
   , m_rotate(glm::mat4(1))
   , m_model(glm::mat4(1))
   , m_figure("BOX(1.5 1.5 0.0, 2.0 2.0 1.0)")
-  , m_text("abcdefghijklm\nnopqrstuvwxyz", m_manager, ini)
+  // , m_ch_table(ini)
+  , m_gl_window(ini)
+  // , m_text("abcdefghijklm\nnopqrstuvwxyz", m_manager, ini, m_ch_table)
 
 {
   m_w = 600;
@@ -55,8 +57,7 @@ GlApp3D::GlApp3D(IniManager& ini) :
   m_vector3d.add_vector({2.0, -2.0, 3},{1.0, -1.0, 2});
   m_vector3d.add_vector({-2.0, -2.0, 3},{-1.0, -1.0, 2});
 
-  m_text.init_gl_buffer();
-  m_text.set_pos(100, 100);
+  // m_text.set_pos(100, 100);
 
   ChangeLookAt(0.0, 0.0, 0.0);
 }
@@ -180,8 +181,6 @@ void GlApp3D::StartUp(IniManager &ini)
 		m_figure_enabled = false;
 	}
 
-	m_text.init_gl_buffer();
-
 	ChangeLookAt(0.0, 0.0, 0.0);
 }
 
@@ -259,7 +258,8 @@ void GlApp3D::set_window_size(int w, int h)
 {
   m_w = w;
   m_h = h;
-  m_text.set_window_size(w, h);
+  // m_text.set_window_size(w, h);
+  m_gl_window.set_window_size(w, h);
 }
 
 static unsigned long getTick(steady_clock::time_point t_p)
@@ -308,12 +308,20 @@ void GlApp3D::Draw()
   }
 
   shader_ptr->UnBind();
-  m_text.update();
+  // m_text.update();
+  m_gl_window.update();
 
-	glFlush();
+  glFlush();
 }
 void GlApp3D::display_pixel_info(int x, int y, std::string &s)
 {
-  m_text.update_string(x, y, std::move(s));
+  // m_text.update_string(x, y, std::move(s));
+  m_gl_window.update_coord_info(x, y, s);
 }
+
+void GlApp3D::mouse_release(int x, int y)
+{
+  m_gl_window.mouse_release(x, y);
+}
+
 

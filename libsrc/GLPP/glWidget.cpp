@@ -93,7 +93,6 @@ void GlWidget::resize(const int w, const int h)
     //         |     |
     //  (0, 0) |-----| (w, 0)
     //
-std::cout << m_width << " "  << m_height << std::endl;
   m_bg_data.clear();
   
   APPEND(m_bg_data, glm::vec3(0, h, 0));
