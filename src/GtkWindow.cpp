@@ -4,6 +4,7 @@
 #include <gtkmm/application.h>
 #include <boost/format.hpp>
 #include "GtkWindow.h"
+#include "VectorAddDialog.h"
 
 using std::cerr;
 using std::endl;
@@ -19,6 +20,29 @@ static Gtk::Box *create_labeled_scale(const char * l, Gtk::Scale &s)
   control_box->pack_start(*separator, false, false);
   control_box->pack_start(s);
   return control_box;
+}
+
+void GtkAppWindow::on_add_vector()
+{
+  std::cout << "on_add_vector" 
+  << std::endl;
+  VectorAddDialog dig;
+  int ret = dig.run();
+  std::cout << "dialog return: " << ret << std::endl;
+
+}
+
+void GtkAppWindow::create_pop_menu()
+{
+  m_menu_popup = new Gtk::Menu;
+  // Create menu items
+  Gtk::MenuItem *item = new Gtk::MenuItem("Add vector");
+  item->signal_activate().connect(
+    sigc::mem_fun(this, &GtkAppWindow::on_add_vector)
+  );
+
+  m_menu_popup->append(*item);
+  m_menu_popup->show_all();
 }
 
 
@@ -192,10 +216,13 @@ if(v != nullptr&&v->size() >= 3)
   m_gl_area.signal_button_press_event().connect(sigc::mem_fun(*this,
   &GtkAppWindow::on_button));
 
+  create_pop_menu();
+
 // openGL depth buffer enable
   m_gl_area.set_has_depth_buffer(true);
 
   m_gl_app = nullptr;
+
   show_all_children();
 }
 
@@ -335,8 +362,21 @@ bool GtkAppWindow::on_glarea_render(const Glib::RefPtr<Gdk::GLContext>& ctx)
   m_gl_app->Draw(); 
   return true;
 }
+
+void GtkAppWindow::proc_pop_menu(GdkEventButton* event)
+{
+  m_menu_popup->popup(event->button, event->time);
+  return;
+}
+
 bool GtkAppWindow::on_button(GdkEventButton* release_event)
 {
+  if((release_event->type == GDK_BUTTON_PRESS) &&
+    (release_event->button == 3))
+  {
+    proc_pop_menu(release_event);
+    return true;
+  }
   if(release_event->type == GDK_BUTTON_RELEASE) {
     m_gl_app->mouse_release(release_event->x, release_event->y);
     gtk_gl_area_queue_render(m_gl_area.gobj());

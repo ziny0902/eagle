@@ -43,8 +43,11 @@ protected:
   std::shared_ptr<GlApp3D> m_gl_app;
   IniManager m_ini;
 
-
 private:
+  Gtk::Menu *m_menu_popup;
+  void create_pop_menu();
+  void on_add_vector();
+  void proc_pop_menu(GdkEventButton* event);
 };
 
 #endif

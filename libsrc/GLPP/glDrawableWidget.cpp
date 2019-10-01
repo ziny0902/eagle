@@ -105,6 +105,9 @@ void GlDrawableWidget::update()
       );
   shader->SetUniformMatrix4fv("projection", projection);
 
+  GLCall(glEnable(GL_CULL_FACE));
+  GLCall(glEnable(GL_BLEND));
+  GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));  
   glEnable(GL_POLYGON_OFFSET_FILL);
   glPolygonOffset(1, 1);
 
@@ -115,6 +118,8 @@ void GlDrawableWidget::update()
   shader->SetUniform4f("U_color", m_fg.r, m_fg.g, m_fg.b, m_fg.a);
   glPolygonOffset(0, 0);
   glDisable(GL_POLYGON_OFFSET_FILL);
+  GLCall(glDisable(GL_BLEND));
+  GLCall(glDisable(GL_CULL_FACE));
 
   m_res.gl_window_update(m_element_fg);
 

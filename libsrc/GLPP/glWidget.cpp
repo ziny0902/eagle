@@ -7,13 +7,12 @@ using namespace Gl;
   v.push_back(p.y);\
   v.push_back(p.z);
 
-
 GlWidget::GlWidget() :
+
    m_fg(1.0, 1.0, 1.0, 1.0)
-  ,m_bg(1.0, 1.0, 1.0, 0.5)
+  ,m_bg(0.23, 0.48, 0.34, 0.85)
 {
   m_fg = glm::vec4(1);
-  m_bg = glm::vec4(0, 0, 0, 0.5);
   m_x = 0;
   m_y = 0;
   m_width = 0;

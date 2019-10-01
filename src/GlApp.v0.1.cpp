@@ -46,14 +46,6 @@ GlApp3D::GlApp3D(IniManager& ini) :
   shader_ptr->SetUniformMatrix4fv("rotate", m_rotate);
   shader_ptr->SetUniformMatrix4fv("trans", m_model);
   shader_ptr->UnBind();
-  m_vector3d.add_vector({-2.0, 2.0, 3}, {-1.0, 1.0, 2});
-  m_vector3d.add_vector({-2.0, - 2.0, -3},{-1.0, - 1.0, -2});
-  m_vector3d.add_vector({-2.0,  2.0, -3},{-1.0,  1.0, -2});
-  m_vector3d.add_vector({-1.0,  1.0, -2}, {-2.0,  2.0, -3});
-  m_vector3d.add_vector({2.0, 2.0, -3}, {1.0, 1.0, -2});
-  m_vector3d.add_vector({2.0, -2.0, -3},{1.0, -1.0, -2});
-  m_vector3d.add_vector({2.0, -2.0, 3},{1.0, -1.0, 2});
-  m_vector3d.add_vector({-2.0, -2.0, 3},{-1.0, -1.0, 2});
 
   ChangeLookAt(0.0, 0.0, 0.0);
 }
