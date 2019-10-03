@@ -52,7 +52,6 @@ void Mesh::regfunc(std::vector<float> x_range, std::vector<float> y_range, func_
 
 }
 
-
 void Mesh::init_gl_buffer(
   Gl::ResourceManager &manager, 
   Gl::VertexBufferLayout& layout,

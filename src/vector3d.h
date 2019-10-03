@@ -22,12 +22,12 @@ using namespace std::chrono;
 
 class Vector3d : public Gl::Drawable_obj{
 public:
-  Vector3d() {m_total_bytes = 0;}
+  Vector3d() {}
   Vector3d(point_3d s, point_3d e); 
   ~Vector3d() {}
   void add_vector(point_3d s, point_3d e);
   void add_vector(Gl::ResourceManager&, point_3d s, point_3d e);
-  int bytes() { return m_total_bytes;}
+  int bytes() { return m_data.size()*sizeof(float);}
   int size() { return m_data.size(); }
   float * getArray() { return &m_data[0]; }
 
@@ -45,10 +45,13 @@ public:
     Gl::ResourceManager &manager
   );
   bool get_vector_info(int offset, glm::vec3& s, glm::vec3& e);
+  void set_color(glm::vec4& color);
+  void set_highligt_color(glm::vec4& color);
 
 private:
+  glm::vec4 m_color;
+  glm::vec4 m_highlight_color;
   int m_highlight_vector;
-  int m_total_bytes; 
   float m_v_head_len;
   std::vector<float> m_data;
 };

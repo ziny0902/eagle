@@ -2,8 +2,9 @@
 #include "vector3d.h"
 
 Vector3d::Vector3d(point_3d s, point_3d e)
+: m_color(1)
+, m_highlight_color(1, 1, 0, 1)
 {
-  m_total_bytes = 0;
   m_highlight_vector = -1;
 
   // initialize vector config from file(graph3d.ini) 
@@ -13,6 +14,16 @@ Vector3d::Vector3d(point_3d s, point_3d e)
   gl_resource_id = -1;
 
   add_vector(s, e);
+}
+
+void Vector3d::set_color(glm::vec4& color)
+{
+  m_color = color;
+}
+
+void Vector3d::set_highligt_color(glm::vec4& color)
+{
+  m_highlight_color = color;
 }
 
 void Vector3d::add_vector(point_3d s, point_3d e)
@@ -26,7 +37,6 @@ void Vector3d::add_vector(point_3d s, point_3d e)
   for(int i = 0; i < data_cnt; i++){
     m_data.push_back(ptr[i]);
   }
-  m_total_bytes += vector3d.size();
 }
 
 bool Vector3d::get_vector_info(int offset, glm::vec3& s, glm::vec3& e)
@@ -111,7 +121,6 @@ void Vector3d::delete_highlight_vector(
   );
   
   m_highlight_vector = -1;
-  m_total_bytes = m_data.size() * sizeof(float);
 }
 
 void Vector3d::init_gl_buffer(
@@ -141,11 +150,20 @@ void Vector3d::Update(steady_clock::time_point &t_c, Gl::ResourceManager& manage
     manager.gl_window_update(gl_resource_id);
     return;
   }
+  std::shared_ptr<Gl::Shader> shader_ptr =
+    manager.get_shader_from_element_id(gl_resource_id);
 
   int offset_idx = m_highlight_vector/3;
   int total_num_of_indices = bytes()/(3*sizeof(float));
   int num_of_indices = NUM_OF_INDICES_PER_VECTOR;
   if(offset_idx == 0) {
+    shader_ptr->SetUniform4f(
+      "u_Color", 
+      m_highlight_color.x,
+      m_highlight_color.y,
+      m_highlight_color.z,
+      m_highlight_color.a
+    );
     GLCall(glLineWidth(HIGHLIGHT_LINE_WIDTH));
     num_of_indices = NUM_OF_INDICES_PER_VECTOR;
     manager.gl_window_update(
@@ -157,6 +175,13 @@ void Vector3d::Update(steady_clock::time_point &t_c, Gl::ResourceManager& manage
   else {
     manager.gl_window_update(gl_resource_id, 0, offset_idx);
 
+    shader_ptr->SetUniform4f(
+      "u_Color", 
+      m_highlight_color.x,
+      m_highlight_color.y,
+      m_highlight_color.z,
+      m_highlight_color.a
+    );
     GLCall(glLineWidth(HIGHLIGHT_LINE_WIDTH));
     manager.gl_window_update(
       gl_resource_id,
@@ -165,6 +190,13 @@ void Vector3d::Update(steady_clock::time_point &t_c, Gl::ResourceManager& manage
     );
   }
 
+  shader_ptr->SetUniform4f(
+    "u_Color", 
+    m_highlight_color.x,
+    m_highlight_color.y,
+    m_highlight_color.z,
+    m_highlight_color.a
+  );
   GLCall(glLineWidth(1));
   offset_idx += num_of_indices;
   num_of_indices = total_num_of_indices - offset_idx;

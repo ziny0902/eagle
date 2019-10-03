@@ -271,7 +271,7 @@ void GlApp3D::Draw()
 
   shader_ptr->Bind();
 
-  shader_ptr->SetUniform4f(c_u_color, 0.8f, 0.3f, 0.8f, 1.0f); 
+  shader_ptr->SetUniform4f("u_Color", 0.8f, 0.3f, 0.8f, 1.0f); 
 
   shader_ptr->SetUniformMatrix4fv("trans", Identity);
 
