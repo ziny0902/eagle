@@ -29,10 +29,12 @@ GlApp3D::GlApp3D(IniManager& ini) :
   , m_mesh(50, 50)
   , m_vector3d({0.0, 0.0, 0.0},{3.0, 3.2, 2.5})
   , m_projection(1)
+  , m_view(1)
   , m_rotate(glm::mat4(1))
   , m_model(glm::mat4(1))
   , m_figure("BOX(1.5 1.5 0.0, 2.0 2.0 1.0)")
   , m_gl_window(ini)
+  , m_uniBuffer(NULL, 0, GL_UNIFORM_BUFFER)
 
 {
   is_object_selected = false;
@@ -40,14 +42,30 @@ GlApp3D::GlApp3D(IniManager& ini) :
   m_h = 600;
 
 
-  m_shader = m_manager.request_gl_shader_create("shader/vertex.glsl", "shader/fragment.glsl");
+  m_shader 
+    = m_manager.request_gl_shader_create(
+      "shader/vertex.glsl", "shader/fragment.glsl"
+    );
+  m_mesh_shader 
+    = m_manager.request_gl_shader_create(
+      "shader/meshv.glsl", "shader/meshf.glsl"
+    );
+
 
   std::shared_ptr<Gl::Shader> shader_ptr = m_manager.get_shader_from_shader_id(m_shader);
-
   shader_ptr->Bind();
-  shader_ptr->SetUniformMatrix4fv("rotate", m_rotate);
-  shader_ptr->SetUniformMatrix4fv("trans", m_model);
+  shader_ptr->UniformBlockBinding("UniBlock1", UniBlock1);
   shader_ptr->UnBind();
+
+  shader_ptr = m_manager.get_shader_from_shader_id(m_mesh_shader);
+  shader_ptr->Bind();
+  shader_ptr->UniformBlockBinding("UniBlock1", UniBlock1);
+  shader_ptr->UnBind();
+
+  m_uni_offset[UniBlock1] 
+    = m_uniBuffer.BindBufferRange(UniBlock1, 2*sizeof(glm::mat4));
+  m_uniBuffer.AddData(glm::value_ptr(m_model), sizeof(glm::mat4));
+  m_uniBuffer.AddData( glm::value_ptr(m_rotate), sizeof(glm::mat4));
 
   ChangeLookAt(0.0, 0.0, 0.0);
 }
@@ -138,7 +156,7 @@ void GlApp3D::StartUp(IniManager &ini)
 				mesh_fn
 			);
 		}
-		m_mesh.init_gl_buffer(m_manager, layout, m_shader);
+		m_mesh.init_gl_buffer(m_manager, layout, m_mesh_shader);
 	}
 	else {
 		m_mesh_enabled = false;
@@ -183,9 +201,10 @@ void GlApp3D::ChangeLookAt(float x, float y, float z)
   glm::mat4 mvp = m_projection * m_view * m_model;
 
   std::shared_ptr<Gl::Shader> shader_ptr = m_manager.get_shader_from_shader_id(m_shader);
-  shader_ptr->Bind();
-  shader_ptr->SetUniformMatrix4fv("u_MVP", mvp);
-  shader_ptr->UnBind();
+
+  m_uniBuffer.SetGlSubBuffer( 
+    glm::value_ptr(mvp), sizeof(mvp), 0
+  );
 }
 
 void GlApp3D::ModelRotate(float x, float y, float z)
@@ -195,13 +214,13 @@ void GlApp3D::ModelRotate(float x, float y, float z)
   glm::mat4 rotate_z = glm::rotate(glm::mat4(1), glm::radians(z), glm::vec3(0.0, 0.0, 1.0));
 
   m_rotate= rotate_z * rotate_y * rotate_x;
-  glm::mat4 mvp = m_projection * m_view * m_model;
-	glm::vec4 p = mvp * m_rotate *glm::vec4(2, 0, 0, 1);
 
-  std::shared_ptr<Gl::Shader> shader_ptr = m_manager.get_shader_from_shader_id(m_shader);
-  shader_ptr->Bind();
-  shader_ptr->SetUniformMatrix4fv("rotate", m_rotate);
-  shader_ptr->UnBind();
+  m_uniBuffer.SetGlSubBuffer(
+    glm::value_ptr(m_rotate),
+    sizeof(m_rotate),
+    sizeof(m_rotate)
+  );
+
 }
 
 void GlApp3D::ModelTranslate(float x, float y, float z)
@@ -211,10 +230,12 @@ void GlApp3D::ModelTranslate(float x, float y, float z)
 
   glm::mat4 mvp = m_projection * m_view * m_model;
 
-  std::shared_ptr<Gl::Shader> shader_ptr = m_manager.get_shader_from_shader_id(m_shader);
-  shader_ptr->Bind();
-  shader_ptr->SetUniformMatrix4fv("u_MVP", mvp);
-  shader_ptr->UnBind();
+  m_uniBuffer.SetGlSubBuffer(
+    glm::value_ptr(mvp),
+    sizeof(mvp),
+    0
+  );
+
 }
 
 #include <GL/glu.h>
@@ -271,24 +292,22 @@ void GlApp3D::Draw()
 
   shader_ptr->Bind();
 
-  shader_ptr->SetUniform4f("u_Color", 0.8f, 0.3f, 0.8f, 1.0f); 
-
   shader_ptr->SetUniformMatrix4fv("trans", Identity);
-
   // Draw x, y, z axis 
+  shader_ptr->SetUniform4f("u_Color", 1.0f, 0.0f, 0.0f, 1.0f); 
   m_x_axis.Update(t_p, m_manager);
+  shader_ptr->SetUniform4f("u_Color", 0.0f, 1.0f, 0.0f, 1.0f); 
   m_y_axis.Update(t_p, m_manager);
+  shader_ptr->SetUniform4f("u_Color", 0.0f, 0.0f, 1.0f, 1.0f); 
   m_z_axis.Update(t_p, m_manager);
 
-  if(m_mesh_enabled){
-    m_mesh.Update(t_p, m_manager);
-  }
+  shader_ptr->SetUniform4f("u_Color", 0.0f, 0.5f, 1.0f, 1.0f); 
+
   if(m_plot3d_enabled) {
     m_plot3d.Update(t_p, m_manager);
   }
 
   if(m_vector_enabled){
-    shader_ptr->SetUniform4f(c_u_color, 0.3f, 0.3f, 0.5f, 1.0f); 
     m_vector3d.Update(t_p, m_manager);
   }
 
@@ -298,6 +317,11 @@ void GlApp3D::Draw()
   }
 
   shader_ptr->UnBind();
+
+  if(m_mesh_enabled){
+    m_mesh.Update(t_p, m_manager);
+  }
+
   m_gl_window.update();
 
   glFlush();

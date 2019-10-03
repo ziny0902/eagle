@@ -14,6 +14,10 @@ public:
   void AddCapacity(GLenum type);
   void AddCapacity(GLenum type, int size);
   bool AddData(const void *data, unsigned int size );
+  unsigned int BindBufferRange(
+    unsigned int id,
+    unsigned int size
+  );
   void Bind();
   void UnBind();
   unsigned int GetCount() { return m_size / sizeof(GLuint); }

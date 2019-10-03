@@ -200,8 +200,10 @@ void Vector3d::Update(steady_clock::time_point &t_c, Gl::ResourceManager& manage
   GLCall(glLineWidth(1));
   offset_idx += num_of_indices;
   num_of_indices = total_num_of_indices - offset_idx;
+#ifdef __DEBUG__
 std::cout << "offset_idx = " << offset_idx << std::endl;
 std::cout << "num_of_indices = " << num_of_indices << std::endl;
+#endif
 
   manager.gl_window_update(
     gl_resource_id,

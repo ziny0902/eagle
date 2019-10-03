@@ -100,6 +100,7 @@ void Mesh::init_gl_buffer(
 void Mesh::Update(steady_clock::time_point &t_c, Gl::ResourceManager& manager)
 {
   std::shared_ptr<Gl::Shader> shader = manager.get_shader_from_element_id(vao_resource_id);
+  shader->Bind();
 
   glEnable(GL_POLYGON_OFFSET_FILL);
   glPolygonOffset(0, 1);
@@ -112,5 +113,7 @@ void Mesh::Update(steady_clock::time_point &t_c, Gl::ResourceManager& manager)
 
   shader->SetUniform4f("u_Color", 4, 4, 0.8, 1);
   manager.gl_window_update(ibo_resource_id);
+
+  shader->UnBind();
 }
 

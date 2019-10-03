@@ -13,6 +13,8 @@
 
 #define MAX_VAO_NUM   2
 
+enum UniformID {UniBlock1, UniMax};
+
 class GlApp3D {
 
 public:
@@ -37,12 +39,12 @@ private:
   int m_w, m_h;
   bool m_mesh_enabled, m_plot3d_enabled, m_figure_enabled, m_vector_enabled;
   bool is_object_selected;
-  const std::string c_u_color = "u_Color";
 
-  unsigned int m_vertArray;
-  unsigned int m_2d_vertArray;
   unsigned int m_shader;
+  unsigned int m_mesh_shader;
   Gl::ResourceManager m_manager;
+  unsigned int m_uni_offset[UniMax];
+  Gl::GlBuffer m_uniBuffer;
 
   Axis3D m_x_axis;
   Axis3D m_y_axis;

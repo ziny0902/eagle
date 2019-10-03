@@ -80,6 +80,13 @@ void Shader::SetUniformMatrix4fv(const std::string& name, glm::mat4 &trans)
   GLCall(glUniformMatrix4fv(uniTrans, 1, GL_FALSE, glm::value_ptr(trans)));
 }
 
+void Shader::UniformBlockBinding(const std::string& name, const int id)
+{
+  unsigned int index;
+  GLCall(index = glGetUniformBlockIndex(m_RendererID, name.c_str()));
+  GLCall(glUniformBlockBinding(m_RendererID, index, id));
+}
+
 int Shader::GetAttribLocation(std::string &&attr_name)
 {
   CHECK_PROGRAM_VALID(int) 

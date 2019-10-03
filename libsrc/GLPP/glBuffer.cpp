@@ -19,7 +19,8 @@ GlBuffer::GlBuffer(const void *data, unsigned int size, GLenum type)
   GLCall(glGenBuffers(1, &m_RendererId));
   GLCall(glBindBuffer(m_type, m_RendererId));
   AddCapacity(type);
-  AddData( data, size );
+  if(data != NULL)
+    AddData( data, size );
 }
 
 GlBuffer::~GlBuffer()
@@ -74,6 +75,15 @@ void GlBuffer::AddCapacity(GLenum type, int size)
   m_data_cnt = 0;
   Bind();
   GLCall(glBufferData(m_type, m_size, NULL, GL_DYNAMIC_DRAW));
+}
+
+unsigned int GlBuffer::BindBufferRange(
+  unsigned int id,
+  unsigned int size
+)
+{
+  GLCall(glBindBufferRange(m_type, id, m_RendererId, m_data_cnt, size));
+  return m_data_cnt;
 }
 
 void GlBuffer::Bind()
