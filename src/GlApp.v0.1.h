@@ -25,8 +25,9 @@ public:
   void ModelRotate(float x, float y, float z);
   void ModelTranslate(float x, float y, float z);
   void screen_2_world(float &x, float &y, float &z);
-  void display_pixel_info(int x, int y, std::string &s);
+  void display_pixel_info(int x, int y);
   void mouse_release(int x, int y);
+  void add_vector(glm::vec3 s, glm::vec3 e);
 
 private:
   int m_w, m_h;
@@ -52,6 +53,9 @@ private:
   glm::mat4 m_projection;
   glm::mat4 m_view;
   glm::mat4 m_model;
+
+  void post_pixel_sel
+    (std::string &s, float x, float y, float& z, unsigned int);
 
 };
 

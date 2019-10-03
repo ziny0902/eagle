@@ -1,5 +1,9 @@
 #include <iostream>
+#include <cstdlib>
 #include "VectorAddDialog.h"
+
+#define GLM_ENABLE_EXPERIMENTAL 
+#include <glm/gtx/string_cast.hpp>
 
 void VectorAddDialog::on_ok_clicked()
 {
@@ -24,9 +28,12 @@ int VectorAddDialog::run()
   builder->get_widget("VectorAddDialog", m_dialog);
   builder->get_widget("ok", Ok);
   builder->get_widget("cancel", Cancel);
-  builder->get_widget("x_coord", x_coord);
-  builder->get_widget("y_coord", y_coord);
-  builder->get_widget("z_coord", z_coord);
+  builder->get_widget("sx_coord", sx_coord);
+  builder->get_widget("sy_coord", sy_coord);
+  builder->get_widget("sz_coord", sz_coord);
+  builder->get_widget("ex_coord", ex_coord);
+  builder->get_widget("ey_coord", ey_coord);
+  builder->get_widget("ez_coord", ez_coord);
 
   Ok->signal_clicked().connect(sigc::mem_fun(*this,
     &VectorAddDialog::on_ok_clicked));
@@ -36,18 +43,20 @@ int VectorAddDialog::run()
   m_dialog->show_all();
   int ret = m_dialog->run();
 
-  Glib::ustring val = x_coord->get_text();
-  x_str.append(val);
-  val = y_coord->get_text();
-  y_str.append(val);
-  val = z_coord->get_text();
-  z_str.append(val);
+  m_s_v.x = std::stof(sx_coord->get_text());
+  m_s_v.y = std::stof(sy_coord->get_text());
+  m_s_v.z = std::stof(sz_coord->get_text());
+
+  m_e_v.x = std::stof(ex_coord->get_text());
+  m_e_v.y = std::stof(ey_coord->get_text());
+  m_e_v.z = std::stof(ez_coord->get_text());
 
 #ifdef __DEBUG__
-  std::cout << __FILE__ 
-  << " x: " << x_str
-  << " y: " << y_str
-  << " z: " << z_str << std::endl;
+  std::cout << __FILE__  << std::endl
+  << " start: " << glm::to_string(m_s_v) 
+  << std::endl
+  << " end: " << glm::to_string(m_e_v) 
+  << std::endl;
 #endif
 
   delete m_dialog;

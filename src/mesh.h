@@ -8,7 +8,7 @@
 
 typedef float (*func_xy)(float, float);
 
-class Mesh : Gl::Drawable_obj{
+class Mesh : public Gl::Drawable_obj{
 public:
   Mesh(int r, int c);
   void regfunc(std::vector<float> x_range, std::vector<float> y_range, func_xy);
@@ -20,7 +20,14 @@ public:
     Gl::VertexBufferLayout& layout,
     int shader_id
   );
+  virtual bool is_match(unsigned int id)
+  {
+    if(ibo_resource_id == id || ibo_fill_resource_id == id)
+      return true;
+    return false;
+  }
   
+  func_xy cal_func;
 
 private:
   int m_r, m_c; //number of row, col

@@ -269,3 +269,8 @@ int GeoModel3D::size()
   auto b = boost::begin(m_model);
   return (e - b) * 3 * sizeof(float);
 }
+
+int GeoModel3D::distance(point_3d p)
+{
+  return boost::geometry::distance(m_model, p);
+}

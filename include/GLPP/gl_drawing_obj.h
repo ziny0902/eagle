@@ -18,6 +18,10 @@ public:
   ) = 0;
   virtual void Update(steady_clock::time_point &t_c, Gl::ResourceManager& manager) = 0;
   inline int get_gl_resouce_id() { return gl_resource_id; }
+  virtual bool is_match(unsigned int id) {
+    if(gl_resource_id == id) return true;
+    else return false;
+  }
 
 protected:
   int gl_resource_id;

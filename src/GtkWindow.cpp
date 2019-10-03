@@ -2,7 +2,6 @@
 #include <epoxy/gl.h>
 #include <string>
 #include <gtkmm/application.h>
-#include <boost/format.hpp>
 #include "GtkWindow.h"
 #include "VectorAddDialog.h"
 
@@ -29,6 +28,10 @@ void GtkAppWindow::on_add_vector()
   VectorAddDialog dig;
   int ret = dig.run();
   std::cout << "dialog return: " << ret << std::endl;
+  if(ret == Gtk::RESPONSE_CANCEL) return; 
+  m_gl_area.make_current();
+  m_gl_app->add_vector(dig.get_sv(), dig.get_ev());
+  gtk_gl_area_queue_render(m_gl_area.gobj());
 
 }
 
@@ -220,6 +223,7 @@ if(v != nullptr&&v->size() >= 3)
 
 // openGL depth buffer enable
   m_gl_area.set_has_depth_buffer(true);
+  m_gl_area.set_has_stencil_buffer(true);
 
   m_gl_app = nullptr;
 
@@ -329,7 +333,6 @@ void GtkAppWindow::on_glarea_realize()
 {
 // Create OpenGL Application.
   m_gl_area.make_current();
-  glEnable(GL_DEPTH_TEST);
   m_gl_app = std::make_shared<GlApp3D>(m_ini);
   m_gl_app->StartUp(m_ini);
   m_gl_app->set_window_size(m_gl_area.get_width(), m_gl_area.get_height());
@@ -386,62 +389,9 @@ bool GtkAppWindow::on_button(GdkEventButton* release_event)
   m_gl_area.make_current();
   m_gl_area.attach_buffers();
 
-  int viewport[4];
-  glGetIntegerv(GL_VIEWPORT, (int *)&viewport[0]);
-
-  float width = viewport[2];
-  float height = viewport[3];
-  width = width/2;
-  height = height/2;
-
-  float x = (float)((release_event->x - width)/width);
-  float y = (float)((height - release_event->y)/height);
-  float z = 0;
-
-#ifdef __DEBUG__
-  std::cout << "screen --> x: " << release_event->x << "; y: " << release_event->y <<std::endl;
-  std::cout << "normalize --> x: " << x << "; y: " << y <<std::endl;
-#endif
-
-  float depths[36];
-  glReadPixels(
-    release_event->x-3,
-    viewport[3]-3 - release_event->y,
-    6,
-    6,
-    GL_DEPTH_COMPONENT,
-    GL_FLOAT,
-    depths
-  );
-  z = 1;
-  for(int i = 0; i < 36; i++){
-    if(depths[i] != 1.0){
-      z = depths[i];
-      break;
-    }
-  }
-  if(z == 1) return true;
-  if(depths[12] != 1) {
-    z = depths[12];
-  }
-  
-#ifdef __DEBUG__
-std::cout << "width: "<< viewport[2] << "  height:" << viewport[3] <<"  depth: " << z <<std::endl;
-#endif
-
-  m_gl_app->screen_2_world(x, y, z);
-  boost::format fmt
-      = boost::format("x: %s\ny: %s\nz: %s") % x % y % z;
-  std::string msg = fmt.str(); 
-
-#ifdef __DEBUG__
-  std::cout << msg << std::endl;
-#endif
-
   m_gl_app->display_pixel_info(
     release_event->x,
-    release_event->y,
-    msg 
+    release_event->y
   );
 
   gtk_gl_area_queue_render(m_gl_area.gobj());
@@ -449,10 +399,8 @@ std::cout << "width: "<< viewport[2] << "  height:" << viewport[3] <<"  depth: "
   return true;
 }
 
-
 int GtkAppMain(int argc, char *argv[])
 {
-
   auto app = Gtk::Application::create("org.gtkmm.example");
 
   GtkAppWindow window;

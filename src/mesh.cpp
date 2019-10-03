@@ -5,9 +5,14 @@ Mesh::Mesh(int r, int c)
 {
   m_r = r;
   m_c = c;
+  vao_resource_id = -1;
+  ibo_resource_id = -1;
+  ibo_fill_resource_id = -1;
+  cal_func = nullptr;
 }
 void Mesh::regfunc(std::vector<float> x_range, std::vector<float> y_range, func_xy func_ptr)
 {
+  cal_func = func_ptr;
   float x_tick = (x_range[1] - x_range[0])/m_c;
   float y_tick = (y_range[1] - y_range[0])/m_r;
   for( int i = 0; i < m_r; i++){

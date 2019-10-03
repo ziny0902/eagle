@@ -22,6 +22,8 @@ public:
   ResourceManager(int cnt=1);
   ~ResourceManager(){}
 
+  void clear();
+
   //return vertexArray index.
   int request_gl_alloc_vertexArray();
 

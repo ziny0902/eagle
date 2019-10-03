@@ -11,7 +11,7 @@ using namespace std::chrono;
 
 typedef glm::vec3 (*plot_func)(float );
 
-class Plot3D : Gl::Drawable_obj{
+class Plot3D : public Gl::Drawable_obj{
 public:
   Plot3D();
   ~Plot3D(){}

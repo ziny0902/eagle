@@ -30,6 +30,7 @@ public:
   void append(boost::geometry::model::segment<point_3d> const & seg);
   void add_arrow_head(ArrowDir, float);
   int size();
+  int distance(point_3d p);
 
 private:
   boost::geometry::model::linestring<boost::array<float, 3>> m_model;

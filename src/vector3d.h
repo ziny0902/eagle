@@ -14,12 +14,13 @@ using namespace std::chrono;
 //   - init_gl_buffer().
 //   - Update().
 //   - get_gl_resouce_id().
-class Vector3d : Gl::Drawable_obj{
+class Vector3d : public Gl::Drawable_obj{
 public:
   Vector3d() {m_total_bytes = 0;}
   Vector3d(point_3d s, point_3d e); 
   ~Vector3d() {}
   void add_vector(point_3d s, point_3d e);
+  void add_vector(Gl::ResourceManager&, point_3d s, point_3d e);
   int bytes() { return m_total_bytes;}
   int size() { return m_data.size(); }
   float * getArray() { return &m_data[0]; }
@@ -30,6 +31,12 @@ public:
     Gl::ResourceManager &manager, 
     Gl::VertexBufferLayout& layout,
     int shader_id
+  );
+
+  int find_vector(float x, float y, float z);
+  void delete_vector(
+    Gl::ResourceManager &manager, 
+    int offset
   );
 
 private:

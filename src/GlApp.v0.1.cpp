@@ -6,6 +6,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <boost/format.hpp>
 #include <gtk/gtk.h>
 #include "GlApp.v0.1.h"
 
@@ -262,7 +263,8 @@ void GlApp3D::Draw()
   if(  getTick(t_p) >= 12) {
     t_p = steady_clock::now();
   }
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+  m_manager.clear();
 
   std::shared_ptr<Gl::Shader> shader_ptr = m_manager.get_shader_from_shader_id(m_shader);
 
@@ -300,14 +302,119 @@ void GlApp3D::Draw()
   glFlush();
 }
 
-void GlApp3D::display_pixel_info(int x, int y, std::string &s)
+void GlApp3D::display_pixel_info(int x, int y)
 {
-  m_gl_window.update_coord_info(x, y, s);
+  int viewport[4];
+  glGetIntegerv(GL_VIEWPORT, (int *)&viewport[0]);
+
+  float width = viewport[2];
+  float height = viewport[3];
+  width = width/2;
+  height = height/2;
+
+  float nx = (float)((x - width)/width);
+  float ny = (float)((height - y)/height);
+  float z = 0;
+
+#ifdef __DEBUG__
+  std::cout << "screen --> x: " << x << "; y: " << y <<std::endl;
+  std::cout << "normalize --> x: " << nx << "; y: " << ny <<std::endl;
+#endif
+
+  float depths[9];
+  unsigned int index[9];
+  glReadPixels(
+    x-1,
+    viewport[3]+1 - y,
+    3,
+    3,
+    GL_DEPTH_COMPONENT,
+    GL_FLOAT,
+    depths
+  );
+
+  glReadPixels(
+    x-1,
+    viewport[3]+1 - y,
+    3,
+    3,
+    GL_STENCIL_INDEX,
+    GL_UNSIGNED_INT,
+    index
+  );
+
+  unsigned int id = 0;;
+  z = 1;
+  for(int i = 0; i < 9; i++){
+    if(depths[i] != 1.0){
+      z = depths[i];
+      id = index[i];
+      break;
+    }
+  }
+  if(z == 1) return ;
+  if(depths[5] != 1) {
+    z = depths[5];
+    id = index[5];
+  }
+  
+#ifdef __DEBUG__
+std::cout <<  "  depth: " << z 
+<< " id: " << id
+<<std::endl;
+#endif
+
+  screen_2_world(nx, ny, z);
+
+  std::string msg; 
+  post_pixel_sel(msg, nx, ny, z, id); 
+
+#ifdef __DEBUG__
+  std::cout << msg << std::endl;
+#endif
+  m_gl_window.update_coord_info(x, y, msg);
+}
+
+void GlApp3D::post_pixel_sel(
+  std::string &msg,
+  float x,
+  float y,
+  float& z,
+  unsigned int id
+)
+{
+  if (m_plot3d.is_match(id)) {
+    msg.append("plot3d\n");
+  }
+  if (m_mesh.is_match(id)) {
+    msg.append("mesh\n");
+    z = m_mesh.cal_func(x, y);
+  }
+  if (m_vector3d.is_match(id)) {
+    int offset = m_vector3d.find_vector(x, y, z);
+    boost::format fmt
+      = boost::format("vector3d: %s\n") % (offset/18);
+    msg.append(fmt.str());
+  }
+
+  boost::format fmt
+      = boost::format("x: %s\ny: %s\nz: %s") % x % y % z;
+  msg.append(fmt.str());
 }
 
 void GlApp3D::mouse_release(int x, int y)
 {
   m_gl_window.mouse_release(x, y);
+}
+
+void GlApp3D::add_vector(glm::vec3 s, glm::vec3 e)
+{
+std::cout << "add_vector" << std::endl;
+  m_vector3d.add_vector(
+    m_manager,
+    {s.x, s.y, s.z},
+    {e.x, e.y, e.z}
+  );
 }
 
 

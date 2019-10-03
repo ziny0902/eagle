@@ -1,4 +1,5 @@
 #include <iostream>
+#include <GLPP/util.h>
 #include <GLPP/gl_resource_manager.h>
 
 using namespace Gl;
@@ -9,6 +10,20 @@ m_vertArray(cnt)
   for(int i = 0; i < cnt; i++){
     m_vertArray_alloc_table.push_back(false);
   }
+  GLCall(glEnable(GL_DEPTH_TEST));
+  GLCall(glEnable(GL_STENCIL_TEST));
+  GLCall(glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE));
+}
+
+void ResourceManager::clear()
+{
+  GLCall(glClearStencil(0)); 
+  GLCall(glClear(
+      GL_COLOR_BUFFER_BIT 
+    | GL_DEPTH_BUFFER_BIT
+    | GL_STENCIL_BUFFER_BIT
+  )
+  );
 }
 
 int ResourceManager::request_gl_alloc_vertexArray()
@@ -144,13 +159,19 @@ void ResourceManager::gl_window_update(unsigned short element_id)
   m_vertArray.Bind(element->vertexArray_idx);
   element->vbo->Bind();
 
+  GLCall(glStencilFunc(GL_ALWAYS, element_id, -1));
+
   if(element->buffer_type == GL_ARRAY_BUFFER)
   {
-    glDrawArrays(element->mode, 0, element->num_of_vertex);
+    GLCall(glDrawArrays(element->mode, 0, element->num_of_vertex));
   }
   else if(element->buffer_type == GL_ELEMENT_ARRAY_BUFFER)
   {
-    glDrawElements(element->mode, element->num_of_vertex, GL_UNSIGNED_SHORT, 0);
+    GLCall(glDrawElements(
+      element->mode,
+      element->num_of_vertex,
+      GL_UNSIGNED_SHORT, 0
+    ));
   }
   else {
     std::cout << __FILE__ << "(" << __LINE__ << ") : " << "Invalid buffer type \n";
