@@ -149,6 +149,23 @@ std::shared_ptr<Gl::Shader> ResourceManager::get_shader_from_shader_id(unsigned 
 }
 
 void ResourceManager::gl_window_update(unsigned short element_id)
+
+{
+  if(element_id >= m_element_list.size()) {
+    std::cout << __FILE__ << "(" << __LINE__ << ") : " << "Invaild element id \n";
+    return ;
+  }
+
+  std::shared_ptr<ResourceElement> element = m_element_list[element_id];
+  gl_window_update(element_id, 0, element->num_of_vertex);
+
+}
+
+void ResourceManager::gl_window_update(
+  unsigned short element_id
+  , int offset
+  , int num_of_vertex
+)
 {
   if(element_id >= m_element_list.size()) {
     std::cout << __FILE__ << "(" << __LINE__ << ") : " << "Invaild element id \n";
@@ -163,14 +180,14 @@ void ResourceManager::gl_window_update(unsigned short element_id)
 
   if(element->buffer_type == GL_ARRAY_BUFFER)
   {
-    GLCall(glDrawArrays(element->mode, 0, element->num_of_vertex));
+    GLCall(glDrawArrays(element->mode, 0+offset, num_of_vertex));
   }
   else if(element->buffer_type == GL_ELEMENT_ARRAY_BUFFER)
   {
     GLCall(glDrawElements(
       element->mode,
-      element->num_of_vertex,
-      GL_UNSIGNED_SHORT, 0
+      num_of_vertex,
+      GL_UNSIGNED_SHORT, (void*)(offset*sizeof(GLuint))
     ));
   }
   else {

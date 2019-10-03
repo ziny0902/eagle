@@ -4,6 +4,7 @@
 Vector3d::Vector3d(point_3d s, point_3d e)
 {
   m_total_bytes = 0;
+  m_highlight_vector = -1;
 
   // initialize vector config from file(graph3d.ini) 
   IniManager ini("config/graph3d.ini");
@@ -26,7 +27,33 @@ void Vector3d::add_vector(point_3d s, point_3d e)
     m_data.push_back(ptr[i]);
   }
   m_total_bytes += vector3d.size();
-std::cout << "total bytes: "<< m_total_bytes << std::endl;
+}
+
+bool Vector3d::get_vector_info(int offset, glm::vec3& s, glm::vec3& e)
+{
+  if( offset+NUM_OF_ELEMENT_PER_VECTOR > m_data.size() 
+      || offset < 0
+      || (offset%NUM_OF_ELEMENT_PER_VECTOR) != 0
+  ) 
+  {
+    std::cout << "Error: Vector3d::get_vector_info\n"
+    << "Invalid offset\n";
+    return false;
+  }
+  s.x = m_data[offset];
+  s.y = m_data[offset+1];
+  s.z = m_data[offset+2];
+
+  e.x = m_data[offset+3];
+  e.y = m_data[offset+4];
+  e.z = m_data[offset+5];
+
+  return true;
+}
+
+void Vector3d::highlight(int offset)
+{
+  m_highlight_vector = offset;
 }
 
 void Vector3d::add_vector(
@@ -52,7 +79,7 @@ int Vector3d::find_vector(float x, float y, float z)
   size_t len = m_data.size();
   int c_distance = std::numeric_limits<int>::max();
   int offset = 0;
-  for(int i = 0; i < len; i += 18) {
+  for(int i = 0; i < len; i += NUM_OF_ELEMENT_PER_VECTOR) {
     geo::GeoModel3D vector3d;
     vector3d.append({m_data[i], m_data[i+1], m_data[i+2]});
     vector3d.append({m_data[i+3], m_data[i+4], m_data[i+5]});
@@ -66,14 +93,13 @@ int Vector3d::find_vector(float x, float y, float z)
 }
 
 void Vector3d::delete_vector(
-  Gl::ResourceManager &manager, 
-  int offset
+  Gl::ResourceManager &manager
 )
 {
-  if( m_data.size() < offset+18+1) return;
+  if( m_data.size() < m_highlight_vector+NUM_OF_ELEMENT_PER_VECTOR+1) return;
   m_data.erase(
-    m_data.begin()+offset, 
-    m_data.begin()+offset+18
+    m_data.begin()+m_highlight_vector, 
+    m_data.begin()+m_highlight_vector+NUM_OF_ELEMENT_PER_VECTOR
   );
 
   //GL buffer update.
@@ -84,6 +110,7 @@ void Vector3d::delete_vector(
     m_data.size()/3
   );
   
+  m_highlight_vector = -1;
 }
 
 void Vector3d::init_gl_buffer(
@@ -108,7 +135,43 @@ void Vector3d::init_gl_buffer(
 
 void Vector3d::Update(steady_clock::time_point &t_c, Gl::ResourceManager& manager)
 {
-  manager.gl_window_update(gl_resource_id);
-}
+  if (m_highlight_vector == -1)
+  {
+    manager.gl_window_update(gl_resource_id);
+    return;
+  }
 
+  int offset_idx = m_highlight_vector/3;
+  int total_num_of_indices = bytes()/(3*sizeof(float));
+  int num_of_indices = NUM_OF_INDICES_PER_VECTOR;
+  if(offset_idx == 0) {
+    GLCall(glLineWidth(HIGHLIGHT_LINE_WIDTH));
+    num_of_indices = NUM_OF_INDICES_PER_VECTOR;
+    manager.gl_window_update(
+      gl_resource_id,
+      offset_idx,
+      num_of_indices
+    );
+  }
+  else {
+    manager.gl_window_update(gl_resource_id, 0, offset_idx);
+
+    GLCall(glLineWidth(HIGHLIGHT_LINE_WIDTH));
+    manager.gl_window_update(
+      gl_resource_id,
+      offset_idx,
+      num_of_indices
+    );
+  }
+
+  GLCall(glLineWidth(1));
+  offset_idx += num_of_indices;
+  num_of_indices = total_num_of_indices - offset_idx;
+  manager.gl_window_update(
+    gl_resource_id,
+    offset_idx,
+    num_of_indices
+  );
+
+}
 

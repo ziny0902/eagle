@@ -1,5 +1,6 @@
 #pragma once
 #include <chrono>
+#include <glm/glm.hpp>
 #include <Geo/geometry_3d_object.h>
 #include <GLPP/glBuffer.h>
 #include <GLPP/vertex_arrays.h>
@@ -14,6 +15,11 @@ using namespace std::chrono;
 //   - init_gl_buffer().
 //   - Update().
 //   - get_gl_resouce_id().
+
+#define NUM_OF_ELEMENT_PER_VECTOR 18
+#define NUM_OF_INDICES_PER_VECTOR 6 
+#define HIGHLIGHT_LINE_WIDTH 5
+
 class Vector3d : public Gl::Drawable_obj{
 public:
   Vector3d() {m_total_bytes = 0;}
@@ -34,12 +40,14 @@ public:
   );
 
   int find_vector(float x, float y, float z);
+  void highlight(int offset);
   void delete_vector(
-    Gl::ResourceManager &manager, 
-    int offset
+    Gl::ResourceManager &manager
   );
+  bool get_vector_info(int offset, glm::vec3& s, glm::vec3& e);
 
 private:
+  int m_highlight_vector;
   int m_total_bytes; 
   float m_v_head_len;
   std::vector<float> m_data;

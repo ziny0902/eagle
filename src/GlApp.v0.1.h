@@ -32,6 +32,7 @@ public:
 private:
   int m_w, m_h;
   bool m_mesh_enabled, m_plot3d_enabled, m_figure_enabled, m_vector_enabled;
+  bool is_object_selected;
   const std::string c_u_color = "u_Color";
 
   unsigned int m_vertArray;

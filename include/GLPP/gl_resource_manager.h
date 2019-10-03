@@ -61,6 +61,11 @@ public:
   std::shared_ptr<Gl::Shader> get_shader_from_element_id(unsigned short element_id);
   std::shared_ptr<Gl::Shader> get_shader_from_shader_id(unsigned short shader_id);
   void gl_window_update(unsigned short element_id); 
+  void gl_window_update(
+    unsigned short element_id
+    , int offset
+    , int num_of_vertex
+  ); 
   void resource_bind(unsigned short element_id);
   void resource_unbind(unsigned short element_id);
 

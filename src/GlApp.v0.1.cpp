@@ -35,6 +35,7 @@ GlApp3D::GlApp3D(IniManager& ini) :
   , m_gl_window(ini)
 
 {
+  is_object_selected = false;
   m_w = 600;
   m_h = 600;
 
@@ -316,6 +317,9 @@ void GlApp3D::display_pixel_info(int x, int y)
   float ny = (float)((height - y)/height);
   float z = 0;
 
+  is_object_selected = false;
+  m_vector3d.highlight(-1);
+
 #ifdef __DEBUG__
   std::cout << "screen --> x: " << x << "; y: " << y <<std::endl;
   std::cout << "normalize --> x: " << nx << "; y: " << ny <<std::endl;
@@ -391,10 +395,17 @@ void GlApp3D::post_pixel_sel(
     z = m_mesh.cal_func(x, y);
   }
   if (m_vector3d.is_match(id)) {
+    is_object_selected = true;
     int offset = m_vector3d.find_vector(x, y, z);
-    boost::format fmt
-      = boost::format("vector3d: %s\n") % (offset/18);
-    msg.append(fmt.str());
+    m_vector3d.highlight(offset);
+    glm::vec3 sp, ep;
+    bool ret = m_vector3d.get_vector_info(offset, sp, ep);
+    if(ret){
+      boost::format fmt
+        = boost::format("vector3d: (%s, %s, %s)(%s, %s, %s)\n") 
+        % sp.x % sp.y % sp.z % ep.x % ep.y % ep.z;
+      msg.append(fmt.str());
+    }
   }
 
   boost::format fmt
