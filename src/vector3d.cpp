@@ -92,11 +92,11 @@ int Vector3d::find_vector(float x, float y, float z)
   return offset;
 }
 
-void Vector3d::delete_vector(
+void Vector3d::delete_highlight_vector(
   Gl::ResourceManager &manager
 )
 {
-  if( m_data.size() < m_highlight_vector+NUM_OF_ELEMENT_PER_VECTOR+1) return;
+  if( m_data.size() < m_highlight_vector+NUM_OF_ELEMENT_PER_VECTOR) return;
   m_data.erase(
     m_data.begin()+m_highlight_vector, 
     m_data.begin()+m_highlight_vector+NUM_OF_ELEMENT_PER_VECTOR
@@ -111,6 +111,7 @@ void Vector3d::delete_vector(
   );
   
   m_highlight_vector = -1;
+  m_total_bytes = m_data.size() * sizeof(float);
 }
 
 void Vector3d::init_gl_buffer(
@@ -167,6 +168,9 @@ void Vector3d::Update(steady_clock::time_point &t_c, Gl::ResourceManager& manage
   GLCall(glLineWidth(1));
   offset_idx += num_of_indices;
   num_of_indices = total_num_of_indices - offset_idx;
+std::cout << "offset_idx = " << offset_idx << std::endl;
+std::cout << "num_of_indices = " << num_of_indices << std::endl;
+
   manager.gl_window_update(
     gl_resource_id,
     offset_idx,

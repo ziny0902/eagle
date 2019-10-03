@@ -23,8 +23,10 @@ static Gtk::Box *create_labeled_scale(const char * l, Gtk::Scale &s)
 
 void GtkAppWindow::on_add_vector()
 {
+#ifdef __DEBUG__
   std::cout << "on_add_vector" 
   << std::endl;
+#endif
   VectorAddDialog dig;
   int ret = dig.run();
   std::cout << "dialog return: " << ret << std::endl;
@@ -35,6 +37,13 @@ void GtkAppWindow::on_add_vector()
 
 }
 
+void GtkAppWindow::on_del_object()
+{
+  m_gl_area.make_current();
+  m_gl_app->del_select_object();
+  gtk_gl_area_queue_render(m_gl_area.gobj());
+}
+
 void GtkAppWindow::create_pop_menu()
 {
   m_menu_popup = new Gtk::Menu;
@@ -43,8 +52,14 @@ void GtkAppWindow::create_pop_menu()
   item->signal_activate().connect(
     sigc::mem_fun(this, &GtkAppWindow::on_add_vector)
   );
-
   m_menu_popup->append(*item);
+
+  m_del_object_menu= new Gtk::MenuItem("delete selected object");
+  m_del_object_menu->signal_activate().connect(
+    sigc::mem_fun(this, &GtkAppWindow::on_del_object)
+  );
+  m_menu_popup->append(*m_del_object_menu);
+
   m_menu_popup->show_all();
 }
 
@@ -72,6 +87,7 @@ GtkAppWindow::GtkAppWindow() :
   m_Scale_z(m_adjustment_lookat_z),
   m_ini("config/graph3d.ini")
 {
+m_menu_popup = nullptr;
 // scale value init from file(graph3d.ini) 
 
 std::shared_ptr<std::vector<double>> v = m_ini.get_double_list("window", "lookat_x");
@@ -219,7 +235,6 @@ if(v != nullptr&&v->size() >= 3)
   m_gl_area.signal_button_press_event().connect(sigc::mem_fun(*this,
   &GtkAppWindow::on_button));
 
-  create_pop_menu();
 
 // openGL depth buffer enable
   m_gl_area.set_has_depth_buffer(true);
@@ -368,6 +383,14 @@ bool GtkAppWindow::on_glarea_render(const Glib::RefPtr<Gdk::GLContext>& ctx)
 
 void GtkAppWindow::proc_pop_menu(GdkEventButton* event)
 {
+  if(m_menu_popup == nullptr)
+    create_pop_menu();
+  if(m_gl_app->is_selected()){
+    m_del_object_menu->set_sensitive(true);
+  }
+  else {
+    m_del_object_menu->set_sensitive(false);
+  }
   m_menu_popup->popup(event->button, event->time);
   return;
 }

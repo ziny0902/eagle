@@ -28,6 +28,10 @@ public:
   void display_pixel_info(int x, int y);
   void mouse_release(int x, int y);
   void add_vector(glm::vec3 s, glm::vec3 e);
+  inline bool is_selected() {
+    return is_object_selected;
+  }
+  void del_select_object();
 
 private:
   int m_w, m_h;

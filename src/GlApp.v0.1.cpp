@@ -402,9 +402,11 @@ void GlApp3D::post_pixel_sel(
     bool ret = m_vector3d.get_vector_info(offset, sp, ep);
     if(ret){
       boost::format fmt
-        = boost::format("vector3d: (%s, %s, %s)(%s, %s, %s)\n") 
+        = boost::format("vector3d\n"
+       "(%s, %s, %s)\n(%s, %s, %s)\n") 
         % sp.x % sp.y % sp.z % ep.x % ep.y % ep.z;
       msg.append(fmt.str());
+      return;
     }
   }
 
@@ -426,6 +428,12 @@ std::cout << "add_vector" << std::endl;
     {s.x, s.y, s.z},
     {e.x, e.y, e.z}
   );
+}
+
+void GlApp3D::del_select_object()
+{
+  is_object_selected = false;
+  m_vector3d.delete_highlight_vector(m_manager);
 }
 
 

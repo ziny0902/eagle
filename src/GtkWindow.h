@@ -45,9 +45,11 @@ protected:
 
 private:
   Gtk::Menu *m_menu_popup;
+  Gtk::MenuItem *m_del_object_menu; 
   void create_pop_menu();
   void on_add_vector();
   void proc_pop_menu(GdkEventButton* event);
+  void on_del_object();
 };
 
 #endif

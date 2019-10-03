@@ -41,7 +41,7 @@ public:
 
   int find_vector(float x, float y, float z);
   void highlight(int offset);
-  void delete_vector(
+  void delete_highlight_vector(
     Gl::ResourceManager &manager
   );
   bool get_vector_info(int offset, glm::vec3& s, glm::vec3& e);

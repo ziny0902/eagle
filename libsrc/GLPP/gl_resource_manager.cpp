@@ -167,6 +167,7 @@ void ResourceManager::gl_window_update(
   , int num_of_vertex
 )
 {
+  if(num_of_vertex == 0) return;
   if(element_id >= m_element_list.size()) {
     std::cout << __FILE__ << "(" << __LINE__ << ") : " << "Invaild element id \n";
     return ;
