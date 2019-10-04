@@ -9,6 +9,63 @@ using std::cerr;
 using std::endl;
 using std::string;
 
+void GtkAppWindow::register_sig_handler()
+{
+  // Add Event Mask.
+  m_gl_area.add_events(
+      Gdk::BUTTON_RELEASE_MASK
+    | Gdk::BUTTON_PRESS_MASK 
+    | Gdk::POINTER_MOTION_MASK 
+    | Gdk::SCROLL_MASK 
+  );
+  this->add_events(
+      Gdk::KEY_PRESS_MASK 
+    | Gdk::KEY_RELEASE_MASK
+  );
+
+// Add signal handler
+  m_adjustment_lookat_x->signal_value_changed().connect(sigc::mem_fun(*this,
+  &GtkAppWindow::on_lookat_changed));
+  m_adjustment_lookat_y->signal_value_changed().connect(sigc::mem_fun(*this,
+  &GtkAppWindow::on_lookat_changed));
+  m_adjustment_lookat_z->signal_value_changed().connect(sigc::mem_fun(*this,
+  &GtkAppWindow::on_lookat_changed));
+
+  m_adjustment_rotate_x->signal_value_changed().connect(sigc::mem_fun(*this,
+  &GtkAppWindow::on_rotate_changed));
+  m_adjustment_rotate_y->signal_value_changed().connect(sigc::mem_fun(*this,
+  &GtkAppWindow::on_rotate_changed));
+  m_adjustment_rotate_z->signal_value_changed().connect(sigc::mem_fun(*this,
+  &GtkAppWindow::on_rotate_changed));
+
+  m_adjustment_translate_x->signal_value_changed().connect(sigc::mem_fun(*this,
+  &GtkAppWindow::on_translate_changed));
+  m_adjustment_translate_y->signal_value_changed().connect(sigc::mem_fun(*this,
+  &GtkAppWindow::on_translate_changed));
+  m_adjustment_translate_z->signal_value_changed().connect(sigc::mem_fun(*this,
+  &GtkAppWindow::on_translate_changed));
+
+
+  m_gl_area.signal_render().connect(sigc::mem_fun(*this,
+  &GtkAppWindow::on_glarea_render), true);
+  m_gl_area.signal_realize().connect(sigc::mem_fun(*this,
+  &GtkAppWindow::on_glarea_realize));
+  m_gl_area.signal_resize().connect(sigc::mem_fun(*this,
+  &GtkAppWindow::on_resize));
+  m_gl_area.signal_button_release_event().connect(sigc::mem_fun(*this,
+  &GtkAppWindow::on_button));
+  m_gl_area.signal_button_press_event().connect(sigc::mem_fun(*this,
+  &GtkAppWindow::on_button));
+
+  m_gl_area.signal_scroll_event().connect(
+      sigc::mem_fun(*this, &GtkAppWindow::on_glarea_scroll)
+  );
+
+  this->signal_key_press_event().connect(sigc::mem_fun(*this,
+  &GtkAppWindow::on_key_event));
+  this->signal_key_release_event().connect(sigc::mem_fun(*this,
+  &GtkAppWindow::on_key_event));
+}
 
 static Gtk::Box *create_labeled_scale(const char * l, Gtk::Scale &s)
 {
@@ -200,41 +257,7 @@ if(v != nullptr&&v->size() >= 3)
 // Add highest level container 
   add(box_container);
 
-// Add signal handler
-  m_adjustment_lookat_x->signal_value_changed().connect(sigc::mem_fun(*this,
-  &GtkAppWindow::on_lookat_changed));
-  m_adjustment_lookat_y->signal_value_changed().connect(sigc::mem_fun(*this,
-  &GtkAppWindow::on_lookat_changed));
-  m_adjustment_lookat_z->signal_value_changed().connect(sigc::mem_fun(*this,
-  &GtkAppWindow::on_lookat_changed));
-
-  m_adjustment_rotate_x->signal_value_changed().connect(sigc::mem_fun(*this,
-  &GtkAppWindow::on_rotate_changed));
-  m_adjustment_rotate_y->signal_value_changed().connect(sigc::mem_fun(*this,
-  &GtkAppWindow::on_rotate_changed));
-  m_adjustment_rotate_z->signal_value_changed().connect(sigc::mem_fun(*this,
-  &GtkAppWindow::on_rotate_changed));
-
-  m_adjustment_translate_x->signal_value_changed().connect(sigc::mem_fun(*this,
-  &GtkAppWindow::on_translate_changed));
-  m_adjustment_translate_y->signal_value_changed().connect(sigc::mem_fun(*this,
-  &GtkAppWindow::on_translate_changed));
-  m_adjustment_translate_z->signal_value_changed().connect(sigc::mem_fun(*this,
-  &GtkAppWindow::on_translate_changed));
-
-  m_gl_area.add_events(Gdk::BUTTON_RELEASE_MASK|Gdk::BUTTON_PRESS_MASK );
-
-  m_gl_area.signal_render().connect(sigc::mem_fun(*this,
-  &GtkAppWindow::on_glarea_render), true);
-  m_gl_area.signal_realize().connect(sigc::mem_fun(*this,
-  &GtkAppWindow::on_glarea_realize));
-  m_gl_area.signal_resize().connect(sigc::mem_fun(*this,
-  &GtkAppWindow::on_resize));
-  m_gl_area.signal_button_release_event().connect(sigc::mem_fun(*this,
-  &GtkAppWindow::on_button));
-  m_gl_area.signal_button_press_event().connect(sigc::mem_fun(*this,
-  &GtkAppWindow::on_button));
-
+  register_sig_handler();
 
 // openGL depth buffer enable
   m_gl_area.set_has_depth_buffer(true);
@@ -351,7 +374,7 @@ void GtkAppWindow::on_glarea_realize()
   m_gl_app = std::make_shared<GlApp3D>(m_ini);
   m_gl_app->StartUp(m_ini);
   m_gl_app->set_window_size(m_gl_area.get_width(), m_gl_area.get_height());
-  // Glib::signal_timeout().connect( sigc::mem_fun(*this, &GtkAppWindow::on_timeout), 33);
+  Glib::signal_timeout().connect( sigc::mem_fun(*this, &GtkAppWindow::on_timeout), 33);
   on_translate_changed();
   on_rotate_changed();
   on_lookat_changed();
@@ -418,6 +441,86 @@ bool GtkAppWindow::on_button(GdkEventButton* release_event)
   );
 
   gtk_gl_area_queue_render(m_gl_area.gobj());
+
+  return true;
+}
+
+bool GtkAppWindow::on_key_event(GdkEventKey* key_event)
+{
+  static std::shared_ptr<sigc::connection> sigc = nullptr;
+  if(
+    key_event->keyval != GDK_KEY_Shift_L
+  ) 
+    return false;
+
+  if(key_event->type == GDK_KEY_PRESS){
+#ifdef __DEBUG__
+    std::cout << "key press\n";
+#endif
+
+    if(sigc == nullptr){
+    sigc = std::make_shared<sigc::connection>(
+      m_gl_area.signal_motion_notify_event().connect(
+      sigc::mem_fun(*this, &GtkAppWindow::on_mouse_motion))
+    );
+    }
+  }
+
+  if(key_event->type == GDK_KEY_RELEASE){
+#ifdef __DEBUG__
+    std::cout << "key release\n";
+#endif
+    if(sigc != nullptr)
+      sigc->disconnect();
+    sigc=nullptr;
+  }
+
+  return false;
+}
+
+bool GtkAppWindow::on_mouse_motion(GdkEventMotion* motion_event)
+{
+  static float x=-1, y=-1;
+  float dx = motion_event->x - x;
+  float dy = motion_event->y - y;
+  x = motion_event->x;
+  y = motion_event->y;
+
+  if(std::fabs(dx) > 5 || std::fabs(dy) > 5){
+   return true; 
+  }
+
+  if(fabs(dy) > std::fabs(dx))
+    m_adjustment_rotate_x->set_value(
+      m_adjustment_rotate_x->get_value() + dy
+    );
+  else
+    m_adjustment_rotate_y->set_value(
+      m_adjustment_rotate_y->get_value() + dx
+    );
+
+#ifdef __DEBUG__
+std::cout << "(" << dx
+<< " , " << dy << ")"
+<<std::endl;
+#endif
+  return true;
+}
+
+bool GtkAppWindow::on_glarea_scroll(GdkEventScroll * e)
+{
+  if (e->direction == GDK_SCROLL_UP)
+  {
+    m_adjustment_lookat_z->set_value(
+      m_adjustment_lookat_z->get_value() + 0.5 
+    );
+  }
+  else if (e->direction == GDK_SCROLL_DOWN)
+  {
+    m_adjustment_lookat_z->set_value(
+      m_adjustment_lookat_z->get_value() - 0.5 
+    );
+  }
 
   return true;
 }

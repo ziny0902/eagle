@@ -80,9 +80,9 @@ void GlApp3D::StartUp(IniManager &ini)
 {
 	std::shared_ptr<Gl::Shader> shader_ptr = m_manager.get_shader_from_shader_id(m_shader);
 
-	shader_ptr->Bind();
-	unsigned int position_id = shader_ptr->GetAttribLocation("position");
-	shader_ptr->UnBind();
+  shader_ptr->Bind();
+  unsigned int position_id = shader_ptr->GetAttribLocation("position");
+  shader_ptr->UnBind();
 
 	Gl::VertexBufferLayout layout;
 	layout.Push<float> (3, position_id);
@@ -194,10 +194,15 @@ void GlApp3D::StartUp(IniManager &ini)
 
 void GlApp3D::ChangeLookAt(float x, float y, float z)
 {
-  m_view = glm::lookAt(glm::vec3(x, y, z), 
-                   glm::vec3(0, 0, 0), 
+  m_view = glm::lookAt(glm::vec3(x, y, z ), 
+                   glm::vec3(x, y, z - 1), 
                    glm::vec3(0.0, 1.0, 0.0));
-  m_projection = glm::perspective(45.0f, 1.0f*m_w/m_h, 0.1f, 1000.0f);
+  m_projection = glm::perspective(
+    45.0f,
+    1.0f*m_w/m_h,
+    1.0f,
+    40.0f 
+  );
   glm::mat4 mvp = m_projection * m_view * m_model;
 
   std::shared_ptr<Gl::Shader> shader_ptr = m_manager.get_shader_from_shader_id(m_shader);
@@ -226,7 +231,7 @@ void GlApp3D::ModelRotate(float x, float y, float z)
 void GlApp3D::ModelTranslate(float x, float y, float z)
 {
   m_model = glm::translate(glm::mat4(1.0f), glm::vec3(x, y, z));
-  m_projection = glm::perspective(45.0f, 1.0f*m_w/m_h, 0.01f, 100.0f);
+  // m_projection = glm::perspective(45.0f, 1.0f*m_w/m_h, 0.01f, 100.0f);
 
   glm::mat4 mvp = m_projection * m_view * m_model;
 

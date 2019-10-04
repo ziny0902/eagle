@@ -50,6 +50,10 @@ private:
   void on_add_vector();
   void proc_pop_menu(GdkEventButton* event);
   void on_del_object();
+  void register_sig_handler();
+  bool on_key_event(GdkEventKey* key_event);
+  bool on_mouse_motion(GdkEventMotion* motion_event);
+  bool on_glarea_scroll(GdkEventScroll * e);
 };
 
 #endif
