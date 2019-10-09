@@ -22,25 +22,23 @@
 
 GlApp3D::GlApp3D(IniManager& ini) :
   m_manager(10)
+  , m_uniBuffer(NULL, 0, GL_UNIFORM_BUFFER)
   , m_x_axis(ini, {0, 0.0, 0.0}, {X_MIN, X_MAX}, TICK_SPACING, ENUM_X_AXIS)
   , m_y_axis(ini, {0, 0.0, 0.0}, {Y_MIN, Y_MAX}, TICK_SPACING, ENUM_Y_AXIS)
   , m_z_axis(ini, {0, 0.0, 0.0}, {Z_MIN, Z_MAX}, TICK_SPACING, ENUM_Z_AXIS)
   , m_plot3d()
   , m_mesh(50, 50)
   , m_vector3d({0.0, 0.0, 0.0},{3.0, 3.2, 2.5})
-  , m_projection(1)
-  , m_view(1)
-  , m_rotate(glm::mat4(1))
-  , m_model(glm::mat4(1))
   , m_figure("BOX(1.5 1.5 0.0, 2.0 2.0 1.0)")
   , m_gl_window(ini)
-  , m_uniBuffer(NULL, 0, GL_UNIFORM_BUFFER)
-
+  , m_rotate(glm::mat4(1))
+  , m_projection(1)
+  , m_view(1)
+  , m_model(glm::mat4(1))
 {
   is_object_selected = false;
   m_w = 600;
   m_h = 600;
-
 
   m_shader 
     = m_manager.request_gl_shader_create(
@@ -51,12 +49,10 @@ GlApp3D::GlApp3D(IniManager& ini) :
       "shader/meshv.glsl", "shader/meshf.glsl"
     );
 
-
   std::shared_ptr<Gl::Shader> shader_ptr = m_manager.get_shader_from_shader_id(m_shader);
   shader_ptr->Bind();
   shader_ptr->UniformBlockBinding("UniBlock1", UniBlock1);
   shader_ptr->UnBind();
-
   shader_ptr = m_manager.get_shader_from_shader_id(m_mesh_shader);
   shader_ptr->Bind();
   shader_ptr->UniformBlockBinding("UniBlock1", UniBlock1);
@@ -72,7 +68,6 @@ GlApp3D::GlApp3D(IniManager& ini) :
 
 GlApp3D::~GlApp3D()
 {
-
 }
 
 #include <dlfcn.h>
@@ -225,7 +220,6 @@ void GlApp3D::ModelRotate(float x, float y, float z)
     sizeof(m_rotate),
     sizeof(m_rotate)
   );
-
 }
 
 void GlApp3D::ModelTranslate(float x, float y, float z)
@@ -246,11 +240,11 @@ void GlApp3D::ModelTranslate(float x, float y, float z)
 #include <GL/glu.h>
 void GlApp3D::screen_2_world(float &x, float &y, float &z)
 {
-  glm::mat4 mvp = m_projection * m_view * m_model * m_rotate;
   glm::mat4 inv_mvp =glm::inverse(m_rotate)* glm::inverse(m_projection *m_view*m_model);
 
   glm::vec4 p;
 #ifdef __DEBUG__
+  glm::mat4 mvp = m_projection * m_view * m_model * m_rotate;
   p= mvp * glm::vec4(2, 0, -20, 1);
   p[0] = p[0]/p[3];
   p[1] = p[1]/p[3];

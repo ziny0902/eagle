@@ -21,6 +21,7 @@ add_executable(graph3d
                     object3d.cpp
                     glWidgetWindow.cpp
                     VectorAddDialog.cpp
+                    Plane3dAddDig.cpp
                     )
 
 target_include_directories(graph3d PUBLIC 
@@ -42,6 +43,11 @@ target_link_libraries(graph3d
   ${FREETYPE_LIBRARIES} 
   ${FONTCONFIG_LIBRARIES}
   ${GTKMM_LIBRARIES}
+)
+
+add_custom_command(TARGET graph3d 
+POST_BUILD
+COMMAND $ENV{HOME}/.local/bin/gen_clang_complete.sh ../../.clang_complete
 )
 
 

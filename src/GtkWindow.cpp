@@ -4,6 +4,7 @@
 #include <gtkmm/application.h>
 #include "GtkWindow.h"
 #include "VectorAddDialog.h"
+#include "Plane3dAddDig.h"
 
 using std::cerr;
 using std::endl;
@@ -78,15 +79,31 @@ static Gtk::Box *create_labeled_scale(const char * l, Gtk::Scale &s)
   return control_box;
 }
 
+void GtkAppWindow::on_add_plane()
+{
+#ifdef __DEBUG__
+  std::cout << "on_add_plane" 
+            << std::endl;
+#endif
+
+  Plane3dAddDig add_plane3d;
+  int ret = add_plane3d.run();
+
+  if(ret == Gtk::RESPONSE_CANCEL) return; 
+  m_gl_area.make_current();
+  gtk_gl_area_queue_render(m_gl_area.gobj());
+}
+
 void GtkAppWindow::on_add_vector()
 {
 #ifdef __DEBUG__
   std::cout << "on_add_vector" 
   << std::endl;
 #endif
+
   VectorAddDialog dig;
+
   int ret = dig.run();
-  std::cout << "dialog return: " << ret << std::endl;
   if(ret == Gtk::RESPONSE_CANCEL) return; 
   m_gl_area.make_current();
   m_gl_app->add_vector(dig.get_sv(), dig.get_ev());
@@ -109,6 +126,12 @@ void GtkAppWindow::create_pop_menu()
   item->signal_activate().connect(
     sigc::mem_fun(this, &GtkAppWindow::on_add_vector)
   );
+  m_menu_popup->append(*item);
+
+  item = new Gtk::MenuItem("Add Plane");
+  item->signal_activate().connect(
+      sigc::mem_fun(this, &GtkAppWindow::on_add_plane)
+                                  );
   m_menu_popup->append(*item);
 
   m_del_object_menu= new Gtk::MenuItem("delete selected object");
@@ -457,6 +480,12 @@ bool GtkAppWindow::on_key_event(GdkEventKey* key_event)
 #ifdef __DEBUG__
     std::cout << "key press\n";
 #endif
+     Glib::RefPtr<Gdk::Cursor> cursor 
+    = Gdk::Cursor::create(
+        m_gl_area.get_display()
+      , Gdk::CursorType::CROSSHAIR 
+    );
+    m_gl_area.get_window()->set_cursor(cursor);
 
     if(sigc == nullptr){
     sigc = std::make_shared<sigc::connection>(
@@ -470,6 +499,7 @@ bool GtkAppWindow::on_key_event(GdkEventKey* key_event)
 #ifdef __DEBUG__
     std::cout << "key release\n";
 #endif
+    m_gl_area.get_window()->set_cursor();
     if(sigc != nullptr)
       sigc->disconnect();
     sigc=nullptr;
@@ -480,6 +510,7 @@ bool GtkAppWindow::on_key_event(GdkEventKey* key_event)
 
 bool GtkAppWindow::on_mouse_motion(GdkEventMotion* motion_event)
 {
+
   static float x=-1, y=-1;
   float dx = motion_event->x - x;
   float dy = motion_event->y - y;

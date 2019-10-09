@@ -48,6 +48,7 @@ private:
   Gtk::MenuItem *m_del_object_menu; 
   void create_pop_menu();
   void on_add_vector();
+  void on_add_plane();
   void proc_pop_menu(GdkEventButton* event);
   void on_del_object();
   void register_sig_handler();
