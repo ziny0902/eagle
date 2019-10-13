@@ -3,12 +3,11 @@
 #include <Geo/geometry_common.h>
 #include "plane3d.h"
 
-static float box_vertex[] = {
-    -1, -1, 0
-  , -1,  1, 0
-  ,  1,  1, 0
-  ,  1, -1, 0
-};
+#define ADD_VEC_4(v, x, y, z, a)                  \
+  v.push_back(x);                               \
+  v.push_back(y);                               \
+  v.push_back(z);                               \
+  v.push_back(a);
 
 #define ADD_VEC_3(v, x, y, z) \
   v.push_back(x); \
@@ -22,11 +21,10 @@ static float box_vertex[] = {
 
 void Plane3d::init_fixed_data()
 {
-  ADD_VEC_3(m_fixed, 0, 0, 0);
-  ADD_VEC_3(m_fixed, 0, 1, 0);
+  ADD_VEC_3(m_fixed, -1, -1, 0);
+  ADD_VEC_3(m_fixed, -1, 1, 0);
   ADD_VEC_3(m_fixed, 1, 1, 0);
-  ADD_VEC_3(m_fixed, 1, 0, 0);
-
+  ADD_VEC_3(m_fixed, 1, -1, 0);
 }
 
 void Plane3d::update_gl_data(
@@ -42,7 +40,10 @@ void Plane3d::update_gl_data(
   add_dynamic_data(color, scale, rotate, translate);
 
   unsigned int num_of_vertex = (m_dynamic.size() - idx)/2;
+#ifdef __DEBUG__
   std::cout << __FILE__ << __LINE__ << " " << num_of_vertex << "\n";
+#endif
+
   for(int i=idx; i < m_dynamic.size(); i++)
   {
     std::cout << m_dynamic[i] << "\n";
@@ -66,8 +67,7 @@ void Plane3d::add_dynamic_data(
 
   unsigned int tex_offset = m_tex.size();
   // save texture data
-  // rotate = (rotate/(2*glm::pi<float>()));
-  ADD_VEC_3(m_tex, color.x, color.y, color.z);
+  ADD_VEC_4(m_tex, color.x, color.y, color.z, 0.25);
   ADD_VEC_3(m_tex, scale.x, scale.y, scale.z);
   ADD_VEC_3(m_tex, rotate.x, rotate.y, rotate.z);
   ADD_VEC_3(m_tex, translate.x, translate.y, translate.z);
@@ -75,14 +75,12 @@ void Plane3d::add_dynamic_data(
   m_uniBuffer.AddData((unsigned char *)&m_tex[tex_offset], bytes);
 
   // vertex buffer data
-  // tex_offset = 1;
-  // ADD_VEC_2(m_dynamic, tex_offset, 0);
-  // ADD_VEC_2(m_dynamic, tex_offset, 1);
-  // ADD_VEC_2(m_dynamic, tex_offset, 3);
-  // ADD_VEC_2(m_dynamic, tex_offset, 2);
+  tex_offset = tex_offset/(4*4);
   ADD_VEC_2(m_dynamic, 0, tex_offset);
   ADD_VEC_2(m_dynamic, 1, tex_offset);
   ADD_VEC_2(m_dynamic, 3, tex_offset);
+  ADD_VEC_2(m_dynamic, 3, tex_offset);
+  ADD_VEC_2(m_dynamic, 1, tex_offset);
   ADD_VEC_2(m_dynamic, 2, tex_offset);
 }
 Plane3d::Plane3d() :
@@ -103,9 +101,13 @@ void Plane3d::Update(
   std::shared_ptr<Gl::Shader> shader_ptr =
       manager.get_shader_from_element_id(gl_resource_id);
   shader_ptr->Bind();
+  GLCall(glEnable(GL_BLEND));
+  GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+  GLCall(glDepthFunc(GL_ALWAYS))
 
-  manager.gl_window_update(gl_resource_id, true);
+  manager.gl_window_update(gl_resource_id, false);
 
+  GLCall(glDisable(GL_BLEND));
   shader_ptr->UnBind();
 }
 
@@ -123,7 +125,7 @@ void Plane3d::init_gl_buffer(
       0,
       GL_ARRAY_BUFFER,
       layout,
-      GL_TRIANGLE_STRIP,
+      GL_TRIANGLES,
       shader_id,
       vertArray_id
     );
@@ -135,7 +137,7 @@ void Plane3d::init_gl_buffer(
       m_dynamic.size()/2,
       GL_ARRAY_BUFFER,
       layout,
-      GL_TRIANGLE_STRIP,
+      GL_TRIANGLES,
       shader_id,
       vertArray_id
     );
@@ -149,8 +151,7 @@ void Plane3d::init_gl_buffer(
   m_shader 
     = manager.request_gl_shader_create(
       "shader/plane3dv.glsl", "shader/plane3df.glsl"
-      , "fixed_idx"
-      //      , "gl_Position"
+      , "debug_out"
     );
 
   std::shared_ptr<Gl::Shader> shader_ptr
@@ -187,8 +188,6 @@ void Plane3d::add_plane(
   glm::vec3 norm = glm::cross(s, e);
   caculate_norm_angle(norm, theta, phi);
 
-  std::cout << "w: " << w << " h: " << h <<"\n";
-
   glm::vec3 scale = glm::vec3(w, h, 1);
   glm::vec3 rotate = glm::vec3(phi, 0, theta);
   glm::vec3 vec3_color = glm::vec3(color.r, color.g, color.b);
@@ -197,6 +196,7 @@ void Plane3d::add_plane(
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
+#include <glm/gtc/constants.hpp>
 void Plane3d::caculate_norm_angle(
     glm::vec3& n
     , double& theta
@@ -204,21 +204,12 @@ void Plane3d::caculate_norm_angle(
 )
 {
   glm::vec3 s_coord = rectangular_to_spherical(n);
-  std::cout << "theta: " << s_coord.y << std::endl;
-  std::cout << "phi: " << s_coord.z << std::endl;
-  theta = s_coord.y;
+  theta = (s_coord.y - glm::half_pi<float>()) *-1;
   phi = s_coord.z;
 
-  glm::mat4 rotate_x = 
-      glm::rotate(glm::mat4(1), s_coord.z, glm::vec3(1, 0, 0));
-  glm::mat4 rotate_z = 
-      glm::rotate(glm::mat4(1), s_coord.y, glm::vec3(0, 0, 1));
-  for(int i =0; i < 4; i++)
-  {
-    glm::vec3 *v = (glm::vec3 *)(&box_vertex[3*i]);
-    glm::vec4 conv = rotate_z * rotate_x * glm::vec4((*v), 1);
-    std::cout << glm::to_string(conv) << std::endl;
-  }
+  std::cout << "theta: " << s_coord.y << std::endl;
+  std::cout << "phi: " << s_coord.z << std::endl;
+
 }
 
 void Plane3d::UniformBlockBinding(
