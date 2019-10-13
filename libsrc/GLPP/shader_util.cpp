@@ -69,3 +69,54 @@ unsigned int Gl::CreateShader(const std::string& vertexShader, const std::string
 
 	return program;
 }
+
+unsigned int Gl::CreateDebugShader(
+    const std::string& vertexShader
+    , const std::string& fragmentShader
+    , const std::string& attr
+                              )
+{
+	GLCall(unsigned int program = glCreateProgram());
+	unsigned int vs = CompileShader(GL_VERTEX_SHADER, vertexShader);
+	unsigned int fs = CompileShader(GL_FRAGMENT_SHADER, fragmentShader);
+
+	GLCall(glAttachShader(program, vs));
+	GLCall(glAttachShader(program, fs));
+
+  const char *varying = attr.c_str();
+
+  GLCall(
+      glTransformFeedbackVaryings(
+          program,
+          1,
+          &varying,
+          GL_INTERLEAVED_ATTRIBS )
+         );
+
+	GLCall(glLinkProgram(program));
+
+	GLCall(glValidateProgram(program));
+
+	GLCall(glDeleteShader(vs));
+	GLCall(glDeleteShader(fs));
+
+	return program;
+}
+
+GLenum Gl::primitive_render_to_feedback(GLenum primitive)
+{
+  switch(primitive){
+    case GL_TRIANGLES:
+    case GL_TRIANGLE_STRIP:
+    case GL_TRIANGLE_FAN:
+      return GL_TRIANGLES;
+    case GL_POINTS:
+      return GL_POINTS;
+    case GL_LINES:
+    case GL_LINE_LOOP:
+    case GL_LINE_STRIP:
+      return GL_LINES;
+    default:
+      return primitive;
+  }
+}

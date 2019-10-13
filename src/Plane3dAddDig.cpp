@@ -1,4 +1,5 @@
 #include <iostream>
+#include <util/file.h>
 #include "Plane3dAddDig.h"
 
 
@@ -16,7 +17,7 @@ Plane3dAddDig::~Plane3dAddDig()
 int Plane3dAddDig::run()
 {
   Glib::RefPtr<Gtk::Builder>builder = Gtk::Builder::create_from_file
-      ("plane3d_add_dialog-window.ui");
+      (get_fullpath("plane3d_add_dialog-window.ui"));
   builder->get_widget("Plane3dAddDialog", m_dialog);
 
   Gtk::Button *Ok;
@@ -120,6 +121,8 @@ int Plane3dAddDig::run()
       color.get_blue(),
       color.get_alpha()
                       );
+  m_width = adj_width->get_value();
+  m_height = adj_height->get_value();
 #ifdef __DEBUG__
   {
   std::cout << glm::to_string(m_vec_1) << std::endl;

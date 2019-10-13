@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cstdlib>
+#include <util/file.h>
 #include "VectorAddDialog.h"
 
 #define GLM_ENABLE_EXPERIMENTAL 
@@ -22,7 +23,7 @@ VectorAddDialog::VectorAddDialog()
 int VectorAddDialog::run()
 {
   Glib::RefPtr<Gtk::Builder>builder = Gtk::Builder::create_from_file
-    ("vector_add_dialog-window.ui");
+    (get_fullpath("vector_add_dialog-window.ui"));
   Gtk::Button *Ok;
   Gtk::Button *Cancel;
   builder->get_widget("VectorAddDialog", m_dialog);

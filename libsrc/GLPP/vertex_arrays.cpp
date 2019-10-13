@@ -11,6 +11,13 @@ void VertexBufferLayout::Push<float> (unsigned int count, unsigned int attr_id)
 }
 
 template<>
+void VertexBufferLayout::Push<int> (unsigned int count, unsigned int attr_id)
+{
+  m_Elements.push_back({ GL_INT, count, GL_FALSE, attr_id});
+  m_Stride += VertexBufferElement::GetSizeOfType(GL_INT)*count;
+}
+
+template<>
 void VertexBufferLayout::Push<unsigned int> (unsigned int count, unsigned int attr_id) 
 {
   m_Elements.push_back({ GL_UNSIGNED_INT, count, GL_FALSE, attr_id});

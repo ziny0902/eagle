@@ -22,6 +22,7 @@ struct VertexBufferElement
     {
       case GL_FLOAT:          return 4;
       case GL_UNSIGNED_INT:   return 4;
+      case GL_INT:            return 4;
       case GL_UNSIGNED_BYTE:  return 1;
     }
     ASSERT(false);
@@ -53,8 +54,12 @@ template<>
 void VertexBufferLayout::Push<float> (unsigned int count, unsigned int attr_id);
 template<>
 void VertexBufferLayout::Push<unsigned int> (unsigned int count, unsigned int attr_id);
+
 template<>
 void VertexBufferLayout::Push<unsigned char> (unsigned int count, unsigned int attr_id);
+
+template<>
+void VertexBufferLayout::Push<int> (unsigned int count, unsigned int attr_id);
 
 
 class VertexArrays{

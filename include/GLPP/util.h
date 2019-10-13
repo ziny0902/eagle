@@ -13,6 +13,12 @@ extern unsigned int CompileShader(unsigned int type, const std::string& source);
 extern bool read_shader_file(const std::string &fname, std::string &shader_str);
 extern unsigned int CreateShader(const std::string& vertexShader, const std::string& fragmentShader);
 
+extern unsigned int CreateDebugShader(
+    const std::string& vertexShader
+    , const std::string& fragmentShader
+    , const std::string& attr
+                                          );
+
 #define ASSERT(x) if (!(x)) raise(SIGTRAP);
 #define GLCall(x) Gl::GLClearError(); \
 			x;\
@@ -34,6 +40,7 @@ inline bool GLLogCall(const char* function, const char* file, int line)
 	}
 	return true;
 }
+extern GLenum primitive_render_to_feedback(GLenum primitive);
 
 }
 #endif

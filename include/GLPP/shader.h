@@ -17,7 +17,10 @@ private:
   std::unordered_map<std::string, int> m_UniformLocationCache;
   std::unordered_map<std::string, int> m_AttribLocationCache;
 public:
-  Shader(const std::string& vertex, const std::string& fragment);
+  Shader(const std::string& vertex
+         , const std::string& fragment
+         , const std::string& debug_attr = std::string()
+         );
   ~Shader();
 
   void Bind() ;
@@ -27,6 +30,8 @@ public:
   void SetUniform1i(const std::string& name, int value);
   void SetUniform4f(const std::string& name, float v0, float v1, float v2, float v3 );
   void SetUniformMatrix4fv(const std::string& name, glm::mat4 &trans);
+  void SetUniform3fv(const std::string& name, int count, const float *value);
+  void SetUniform4fv(const std::string& name, int count, const float *value);
   void UniformBlockBinding(const std::string& name, const int id);
   int GetAttribLocation(std::string &&attr_name);
   void EnableAttrib(int id);

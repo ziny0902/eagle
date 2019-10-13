@@ -1,13 +1,16 @@
 #include <glib/gprintf.h>
 #include <signal.h>
 #include <util/ini.h>
+#include <util/file.h>
 
 IniManager::IniManager(std::string &&f)
 {
   g_autoptr(GError) error = NULL;
   m_gkf = g_key_file_new();
 
-  if (!g_key_file_load_from_file(m_gkf, f.c_str(), G_KEY_FILE_NONE, &error)){
+  std::string full_path = get_fullpath(f);
+
+  if (!g_key_file_load_from_file(m_gkf, full_path.c_str(), G_KEY_FILE_NONE, &error)){
     g_warning ("Error loading key file: %s", error->message);
     raise(SIGTRAP);
   }

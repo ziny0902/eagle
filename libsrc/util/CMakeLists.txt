@@ -9,6 +9,7 @@ pkg_check_modules(GLIB glib-2.0)
 ADD_LIBRARY( user_util STATIC
 font_util.cpp
 ini.cpp
+file.cpp
 )
 
 target_include_directories(user_util PUBLIC 

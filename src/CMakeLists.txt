@@ -22,6 +22,7 @@ add_executable(graph3d
                     glWidgetWindow.cpp
                     VectorAddDialog.cpp
                     Plane3dAddDig.cpp
+                    plane3d.cpp
                     )
 
 target_include_directories(graph3d PUBLIC 
@@ -38,6 +39,8 @@ target_link_libraries(graph3d
   user_util
   boost_iostreams 
   boost_serialization 
+	boost_system
+	boost_filesystem
   dl 
   m 
   ${FREETYPE_LIBRARIES} 

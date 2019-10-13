@@ -21,7 +21,7 @@
 #define Z_MAX   5
 
 GlApp3D::GlApp3D(IniManager& ini) :
-  m_manager(10)
+  m_manager(20)
   , m_uniBuffer(NULL, 0, GL_UNIFORM_BUFFER)
   , m_x_axis(ini, {0, 0.0, 0.0}, {X_MIN, X_MAX}, TICK_SPACING, ENUM_X_AXIS)
   , m_y_axis(ini, {0, 0.0, 0.0}, {Y_MIN, Y_MAX}, TICK_SPACING, ENUM_Y_AXIS)
@@ -49,17 +49,18 @@ GlApp3D::GlApp3D(IniManager& ini) :
       "shader/meshv.glsl", "shader/meshf.glsl"
     );
 
+  m_uniBuffer_id = m_manager.alloc_unibuffer_id();
+
   std::shared_ptr<Gl::Shader> shader_ptr = m_manager.get_shader_from_shader_id(m_shader);
   shader_ptr->Bind();
-  shader_ptr->UniformBlockBinding("UniBlock1", UniBlock1);
+  shader_ptr->UniformBlockBinding("UniBlock1", m_uniBuffer_id);
   shader_ptr->UnBind();
   shader_ptr = m_manager.get_shader_from_shader_id(m_mesh_shader);
   shader_ptr->Bind();
-  shader_ptr->UniformBlockBinding("UniBlock1", UniBlock1);
+  shader_ptr->UniformBlockBinding("UniBlock1", m_uniBuffer_id);
   shader_ptr->UnBind();
 
-  m_uni_offset[UniBlock1] 
-    = m_uniBuffer.BindBufferRange(UniBlock1, 2*sizeof(glm::mat4));
+  m_uniBuffer.BindBufferRange(m_uniBuffer_id, 2*sizeof(glm::mat4));
   m_uniBuffer.AddData(glm::value_ptr(m_model), sizeof(glm::mat4));
   m_uniBuffer.AddData( glm::value_ptr(m_rotate), sizeof(glm::mat4));
 
@@ -73,18 +74,18 @@ GlApp3D::~GlApp3D()
 #include <dlfcn.h>
 void GlApp3D::StartUp(IniManager &ini)
 {
-	std::shared_ptr<Gl::Shader> shader_ptr = m_manager.get_shader_from_shader_id(m_shader);
+  std::shared_ptr<Gl::Shader> shader_ptr = m_manager.get_shader_from_shader_id(m_shader);
 
   shader_ptr->Bind();
   unsigned int position_id = shader_ptr->GetAttribLocation("position");
   shader_ptr->UnBind();
 
-	Gl::VertexBufferLayout layout;
-	layout.Push<float> (3, position_id);
+  Gl::VertexBufferLayout layout;
+  layout.Push<float> (3, position_id);
 
-	m_x_axis.init_gl_buffer(m_manager, layout, m_shader);
-	m_y_axis.init_gl_buffer(m_manager, layout, m_shader);
-	m_z_axis.init_gl_buffer(m_manager, layout, m_shader);
+  m_x_axis.init_gl_buffer(m_manager, layout, m_shader);
+  m_y_axis.init_gl_buffer(m_manager, layout, m_shader);
+  m_z_axis.init_gl_buffer(m_manager, layout, m_shader);
 
 // initialize class from config file.
 	const std::shared_ptr<std::string> lib_path_str = ini.get_string("GlApp", "graph_lib_path");
@@ -183,6 +184,9 @@ void GlApp3D::StartUp(IniManager &ini)
 	else {
 		m_figure_enabled = false;
 	}
+
+  m_plane3d.init_gl_buffer(m_manager);
+  m_plane3d.UniformBlockBinding(m_manager, "UniBlock1", m_uniBuffer_id);
 
 	ChangeLookAt(0.0, 0.0, 0.0);
 }
@@ -321,6 +325,8 @@ void GlApp3D::Draw()
     m_mesh.Update(t_p, m_manager);
   }
 
+  m_plane3d.Update(t_p, m_manager);
+
   m_gl_window.update();
 
   glFlush();
@@ -445,12 +451,29 @@ void GlApp3D::mouse_release(int x, int y)
 
 void GlApp3D::add_vector(glm::vec3 s, glm::vec3 e)
 {
+#ifdef __DEBUG__
 std::cout << "add_vector" << std::endl;
+#endif
   m_vector3d.add_vector(
     m_manager,
     {s.x, s.y, s.z},
     {e.x, e.y, e.z}
   );
+}
+
+void GlApp3D::add_plane(
+    glm::vec3& s
+    , glm::vec3& e
+    , glm::vec3& c
+    , double w
+    , double h
+    , glm::vec4& color
+)
+{
+#ifdef __DEBUG__
+  std::cout << "add plane" << std::endl;
+#endif
+  m_plane3d.add_plane(m_manager, s, e, c, w, h, color);
 }
 
 void GlApp3D::del_select_object()

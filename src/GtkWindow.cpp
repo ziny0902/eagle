@@ -91,6 +91,21 @@ void GtkAppWindow::on_add_plane()
 
   if(ret == Gtk::RESPONSE_CANCEL) return; 
   m_gl_area.make_current();
+  glm::vec3& v1 = add_plane3d.get_v1();
+  glm::vec3& v2 = add_plane3d.get_v2();
+  glm::vec3& vc = add_plane3d.get_vc();
+  glm::vec4& color= add_plane3d.get_color();
+  double w = add_plane3d.get_width();
+  double h = add_plane3d.get_height();
+  std::cout << __FILE__ << "w: " << w << " h: " << h <<"\n";
+  m_gl_app->add_plane(
+      v1
+      , v2
+      , vc
+      , w
+      , h
+      , color
+                      );
   gtk_gl_area_queue_render(m_gl_area.gobj());
 }
 
@@ -397,7 +412,7 @@ void GtkAppWindow::on_glarea_realize()
   m_gl_app = std::make_shared<GlApp3D>(m_ini);
   m_gl_app->StartUp(m_ini);
   m_gl_app->set_window_size(m_gl_area.get_width(), m_gl_area.get_height());
-  Glib::signal_timeout().connect( sigc::mem_fun(*this, &GtkAppWindow::on_timeout), 33);
+  //Glib::signal_timeout().connect( sigc::mem_fun(*this, &GtkAppWindow::on_timeout), 33);
   on_translate_changed();
   on_rotate_changed();
   on_lookat_changed();

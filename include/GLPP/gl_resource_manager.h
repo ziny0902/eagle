@@ -24,13 +24,20 @@ public:
 
   void clear();
 
+  int alloc_unibuffer_id()
+  { m_unibuffer_id++; return m_unibuffer_id; }
+
   //return vertexArray index.
   int request_gl_alloc_vertexArray();
 
   void gl_free_vertexArray(unsigned short vertexA_idx);  
 
   // return shader index
-  int request_gl_shader_create(const char *v_f, const char *f_f);
+  int request_gl_shader_create(
+      const char *v_f
+      , const char *f_f
+      , const char *debug_attr = NULL
+                               );
 
   // return element index
   int request_gl_vbo_data(unsigned char* data, 
@@ -60,16 +67,18 @@ public:
 
   std::shared_ptr<Gl::Shader> get_shader_from_element_id(unsigned short element_id);
   std::shared_ptr<Gl::Shader> get_shader_from_shader_id(unsigned short shader_id);
-  void gl_window_update(unsigned short element_id); 
+  void gl_window_update(unsigned short element_id, bool debug = false); 
   void gl_window_update(
     unsigned short element_id
     , int offset
     , int num_of_vertex
+    , bool debug = false
   ); 
   void resource_bind(unsigned short element_id);
   void resource_unbind(unsigned short element_id);
 
 private:
+  int m_unibuffer_id;
   Gl::VertexArrays m_vertArray;
   std::vector<bool> m_vertArray_alloc_table;
   std::vector<std::shared_ptr<Gl::Shader>> m_shader_list;

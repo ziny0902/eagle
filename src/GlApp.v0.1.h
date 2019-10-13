@@ -10,10 +10,7 @@
 #include "object3d.h"
 #include <GLPP/gl_resource_manager.h>
 #include "glWidgetWindow.h"
-
-#define MAX_VAO_NUM   2
-
-enum UniformID {UniBlock1, UniMax};
+#include "plane3d.h"
 
 class GlApp3D {
 
@@ -30,6 +27,14 @@ public:
   void display_pixel_info(int x, int y);
   void mouse_release(int x, int y);
   void add_vector(glm::vec3 s, glm::vec3 e);
+  void add_plane(
+      glm::vec3& s
+      , glm::vec3& e
+      , glm::vec3& c
+      , double w
+      , double h
+      , glm::vec4& color
+                 );
   inline bool is_selected() {
     return is_object_selected;
   }
@@ -42,8 +47,8 @@ private:
 
   unsigned int m_shader;
   unsigned int m_mesh_shader;
+  int m_uniBuffer_id;
   Gl::ResourceManager m_manager;
-  unsigned int m_uni_offset[UniMax];
   Gl::GlBuffer m_uniBuffer;
 
   Axis3D m_x_axis;
@@ -55,6 +60,7 @@ private:
   Vector3d m_vector3d;
   Object3D m_figure;
   glWidgetWindow m_gl_window;
+  Plane3d m_plane3d;
 
   glm::mat4 m_rotate;
   glm::mat4 m_projection;

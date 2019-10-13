@@ -15,14 +15,26 @@ template<> void ReturnError<void>() {return ;}
     return RETURN_VALUE(T);\
   }
 
-Shader::Shader(const std::string& v_path, const std::string& f_path)
-  : m_vert_path(v_path), m_frag_path(f_path), m_RendererID(0)
+#include <util/file.h>
+Shader::Shader(
+    const std::string &v_path
+    , const std::string &f_path
+    , const std::string& debug_attr
+               )
+  : m_vert_path(v_path),
+  m_frag_path(f_path), m_RendererID(0)
 {
   std::string vertexShader;
   std::string fragmentShader;
-  Gl::read_shader_file(v_path, vertexShader); 
-  Gl::read_shader_file(f_path, fragmentShader); 
-  m_RendererID = Gl::CreateShader(vertexShader, fragmentShader);
+  std::string full_path = get_fullpath(v_path);
+
+  Gl::read_shader_file(get_fullpath(v_path), vertexShader);
+  Gl::read_shader_file(get_fullpath(f_path), fragmentShader);
+  if(debug_attr.size())
+    m_RendererID
+        = Gl::CreateDebugShader(vertexShader, fragmentShader, debug_attr);
+  else
+    m_RendererID = Gl::CreateShader(vertexShader, fragmentShader);
   m_is_use = false;
 }
 
@@ -57,6 +69,22 @@ void Shader::SetUniform4f(const std::string& name, float v0, float v1, float v2,
   int location_id;
   GLCall(location_id = GetUniformLocation(name));
   GLCall(glUniform4f( location_id, v0, v1, v2, v3));
+}
+
+void Shader::SetUniform3fv(const std::string& name, int count, const float *value)
+{
+  CHECK_PROGRAM_VALID(void)
+  int location_id;
+  GLCall(location_id = GetUniformLocation(name));
+  GLCall(glUniform3fv( location_id, count, value)); 
+}
+
+void Shader::SetUniform4fv(const std::string& name, int count, const float *value)
+{
+  CHECK_PROGRAM_VALID(void)
+      int location_id;
+  GLCall(location_id = GetUniformLocation(name));
+  GLCall(glUniform4fv( location_id, count, value)); 
 }
 
 int Shader::GetUniformLocation(const std::string& name)
