@@ -87,6 +87,14 @@ void Shader::SetUniform4fv(const std::string& name, int count, const float *valu
   GLCall(glUniform4fv( location_id, count, value)); 
 }
 
+void Shader::GetUniformfv(const std::string& name, float *value)
+{
+  CHECK_PROGRAM_VALID(void)
+      int location_id;
+  GLCall(location_id = GetUniformLocation(name));
+  GLCall(glGetUniformfv(m_RendererID, location_id, value));
+}
+
 int Shader::GetUniformLocation(const std::string& name)
 {
   CHECK_PROGRAM_VALID(int) 

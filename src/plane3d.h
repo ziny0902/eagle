@@ -2,6 +2,8 @@
 #include <vector>
 #include <glm/glm.hpp>
 #include <GLPP/gl_drawing_obj.h>
+#include <Geo/geometry_3d_object.h>
+#include "Highlight.h"
 
 class Plane3d : public Gl::Drawable_obj{
  public:
@@ -39,6 +41,13 @@ class Plane3d : public Gl::Drawable_obj{
       , const std::string& name
       , unsigned int id
                                     );
+  int find_plane(float x, float y, float z);
+
+  bool set_selected_plane(
+      Gl::ResourceManager& manager
+      , Highlight& highlight
+      , glm::vec3& coord
+                                   );
 
  private:
   // OpenGL Resource.
@@ -60,4 +69,5 @@ class Plane3d : public Gl::Drawable_obj{
       , glm::vec3& rotate
       , glm::vec3& translate
   );
+  std::shared_ptr<geo::GeoModel3D> get_plane_by_index(int idx);
 };

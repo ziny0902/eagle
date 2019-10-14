@@ -86,6 +86,7 @@ void GlApp3D::StartUp(IniManager &ini)
   m_x_axis.init_gl_buffer(m_manager, layout, m_shader);
   m_y_axis.init_gl_buffer(m_manager, layout, m_shader);
   m_z_axis.init_gl_buffer(m_manager, layout, m_shader);
+  m_highlight.init_gl_buffer(m_manager, layout, m_shader);
 
 // initialize class from config file.
 	const std::shared_ptr<std::string> lib_path_str = ini.get_string("GlApp", "graph_lib_path");
@@ -327,6 +328,11 @@ void GlApp3D::Draw()
 
   m_plane3d.Update(t_p, m_manager);
 
+  if(is_object_selected)
+    m_highlight.Update(t_p, m_manager);
+  else
+    m_highlight.clear();
+
   m_gl_window.update();
 
   glFlush();
@@ -416,6 +422,11 @@ void GlApp3D::post_pixel_sel(
   unsigned int id
 )
 {
+  if(m_highlight.is_match(id)){
+    is_object_selected = true;
+    id = m_highlight.get_oid();
+  }
+
   if (m_plot3d.is_match(id)) {
     msg.append("plot3d\n");
   }
@@ -426,6 +437,16 @@ void GlApp3D::post_pixel_sel(
   if (m_vector3d.is_match(id)) {
     is_object_selected = true;
     int offset = m_vector3d.find_vector(x, y, z);
+    std::shared_ptr<std::vector<float>> v
+        = m_vector3d.get_vector(offset);
+    m_highlight.set_highlight(
+        m_manager
+        , (unsigned char *)&(*v)[0]
+        , v->size()*sizeof(float)
+        , id
+        , offset
+                              );
+    v = nullptr;
     m_vector3d.highlight(offset);
     glm::vec3 sp, ep;
     bool ret = m_vector3d.get_vector_info(offset, sp, ep);
@@ -437,6 +458,14 @@ void GlApp3D::post_pixel_sel(
       msg.append(fmt.str());
       return;
     }
+  }
+  if (m_plane3d.is_match(id)) {
+    glm::vec3 coord(x,y,z);
+    bool ret = m_plane3d.set_selected_plane(
+        m_manager,
+        m_highlight,
+        coord);
+    if(ret){ is_object_selected = true; }
   }
 
   boost::format fmt
@@ -479,6 +508,7 @@ void GlApp3D::add_plane(
 void GlApp3D::del_select_object()
 {
   is_object_selected = false;
+  m_highlight.clear();
   m_vector3d.delete_highlight_vector(m_manager);
 }
 

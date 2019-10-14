@@ -11,6 +11,7 @@
 #include <GLPP/gl_resource_manager.h>
 #include "glWidgetWindow.h"
 #include "plane3d.h"
+#include "Highlight.h"
 
 class GlApp3D {
 
@@ -61,6 +62,7 @@ private:
   Object3D m_figure;
   glWidgetWindow m_gl_window;
   Plane3d m_plane3d;
+  Highlight m_highlight;
 
   glm::mat4 m_rotate;
   glm::mat4 m_projection;

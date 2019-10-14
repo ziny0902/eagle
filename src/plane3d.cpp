@@ -207,8 +207,8 @@ void Plane3d::caculate_norm_angle(
   theta = (s_coord.y - glm::half_pi<float>()) *-1;
   phi = s_coord.z;
 
-  std::cout << "theta: " << s_coord.y << std::endl;
-  std::cout << "phi: " << s_coord.z << std::endl;
+  std::cout << "theta: " << theta << std::endl;
+  std::cout << "phi: " << phi << std::endl;
 
 }
 
@@ -223,4 +223,125 @@ void Plane3d::UniformBlockBinding(
   shader_ptr->Bind();
   shader_ptr->UniformBlockBinding(name, id);
   shader_ptr->UnBind();
+}
+
+#define GLM_ENABLE_EXPERIMENTAL 
+#include <glm/gtx/string_cast.hpp>
+#include <glm/gtx/rotate_vector.hpp>
+std::shared_ptr<geo::GeoModel3D>
+Plane3d::get_plane_by_index(int idx)
+{
+
+  glm::vec4 points[] = {
+    {-1, -1, 0, 1}
+    , {-1, 1, 0, 1}
+    , {1, 1, 0, 1}
+    , {1, -1, 0, 1}
+    , {-1, -1, 0, 1}
+  };
+  // plane3dv.glsl; struct plane_info
+  idx = idx * 4 * 4 + 4;
+
+  float *ptr = &m_tex[idx];
+  glm::vec4 v_scale (ptr[0], ptr[1], ptr[2], ptr[3]);
+  ptr += 4;
+  glm::vec4 v_rotate (ptr[0], ptr[1], ptr[2], ptr[3]);
+  ptr += 4;
+  glm::vec3 v_translate (ptr[0], ptr[1], ptr[2]);
+
+  glm::mat4 transform_scale
+      = glm::scale(glm::mat4(1.0f), glm::vec3(v_scale.x, v_scale.y, 1.0f));
+  glm::mat4 transform_rotateX
+      = glm::rotate(glm::mat4(1.0f), -1*v_rotate.x, glm::vec3(1, 0, 0));
+  glm::mat4 transform_rotateZ
+      = glm::rotate(glm::mat4(1.0f), -1*v_rotate.z, glm::vec3(0, 0, 1));
+  glm::mat4 transform_translate
+      = glm::translate(glm::mat4(1.0f), v_translate);
+  glm::mat4 transform
+      = transform_translate
+      * transform_rotateZ
+      * transform_rotateX
+      * transform_scale;
+  std::shared_ptr<geo::GeoModel3D> plane
+      = std::make_shared<geo::GeoModel3D>();
+  for(int i=0; i < 5; i++)
+  {
+    points[i] = transform * points[i];
+    std::cout << glm::to_string(points[i]) << "\n";
+    plane->append({points[i].x, points[i].y, points[i].z});
+  }
+
+  return plane;
+}
+
+int Plane3d::find_plane(float x, float y, float z)
+{
+  double c_distance = std::numeric_limits<int>::max();
+  int num_of_plane = m_tex.size()/(4*4);
+  int idx = -1;
+  std::shared_ptr<geo::GeoModel3D> select = nullptr;
+  std::cout << "num_of_plane "  << num_of_plane << std::endl;
+
+  for(int i = 0; i < num_of_plane; i++)
+  {
+    std::shared_ptr<geo::GeoModel3D> plane
+        = get_plane_by_index(i);
+    double distance = plane->distance(geo::GEO_POLYGON, {x, y, z});
+    std::cout << "distance: " << distance << std::endl;
+    if(distance < c_distance) {
+      idx = i;
+      c_distance = distance;
+      select = plane;
+    }
+  }
+
+  return idx;
+}
+
+bool Plane3d::set_selected_plane(
+    Gl::ResourceManager& manager
+    , Highlight& highlight
+    , glm::vec3& coord
+)
+{
+  int idx = find_plane(coord.x, coord.y, coord.z);
+  if(idx < 0) return false;
+  std::shared_ptr<geo::GeoModel3D> ptr = get_plane_by_index(idx);
+  if (ptr == nullptr) {
+    return false;
+  }
+
+  float *arr = ptr->getArray();
+  int len = ptr->size()/sizeof(float);
+  std::vector<float> v;
+  for(int i = 0; i < len; i+=3)
+  {
+    v.push_back(arr[i]);
+    v.push_back(arr[i+1]);
+    v.push_back(arr[i+2]);
+    if(i != 0 && i+3 < len){
+      v.push_back(arr[i]);
+      v.push_back(arr[i+1]);
+      v.push_back(arr[i+2]);
+    }
+  }
+  for(int i=0; i < v.size(); i+=3)
+  {
+    std::cout << "("
+              << v[i]
+              << ","
+              << v[i+1]
+              << ","
+              << v[i+2]
+              << ")\n";
+  }
+  highlight.set_highlight(
+      manager
+      , (unsigned char *)&v[0]
+      , v.size()*sizeof(float)
+      , gl_resource_id
+      , idx
+                          );
+
+  return true;
 }

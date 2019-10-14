@@ -32,6 +32,7 @@ public:
   void SetUniformMatrix4fv(const std::string& name, glm::mat4 &trans);
   void SetUniform3fv(const std::string& name, int count, const float *value);
   void SetUniform4fv(const std::string& name, int count, const float *value);
+  void GetUniformfv(const std::string& name, float *value);
   void UniformBlockBinding(const std::string& name, const int id);
   int GetAttribLocation(std::string &&attr_name);
   void EnableAttrib(int id);

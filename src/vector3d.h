@@ -48,6 +48,7 @@ public:
   bool get_vector_info(int offset, glm::vec3& s, glm::vec3& e);
   void set_color(glm::vec4& color);
   void set_highligt_color(glm::vec4& color);
+  std::shared_ptr<std::vector<float>> get_vector(int offset);
 
 private:
   glm::vec4 m_color;

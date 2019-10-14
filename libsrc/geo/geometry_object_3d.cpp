@@ -270,7 +270,39 @@ int GeoModel3D::size()
   return (e - b) * 3 * sizeof(float);
 }
 
-int GeoModel3D::distance(point_3d p)
+double GeoModel3D::distance(geo::GeoType type, point_3d p)
+{
+  if(type == geo::GEO_POLYGON){
+    auto e = boost::end(m_model);
+    auto b = boost::begin(m_model);
+    boost::array<float, 3> center;
+    boost::geometry::model::multi_point<boost::array<float, 3>> points(b, e);
+    boost::geometry::centroid(points, center);
+    auto it = b;
+    glm::vec3 v1((*it)[0] - center[0]
+                 , (*it)[1] - center[1]
+                 , (*it)[2] - center[2]);
+    it++;
+    glm::vec3 v2((*it)[0] - center[0]
+                 , (*it)[1] - center[1]
+                 , (*it)[2] - center[2]);
+    glm::vec3 norm = glm::normalize(glm::cross(v1, v2));
+    glm::vec3 dv(p.get<0>() - center[0],
+                 p.get<1>() - center[1],
+                 p.get<2>() - center[2]
+                 );
+    double distance = std::fabs(glm::dot(norm, dv));
+    return distance;
+  }
+  return boost::geometry::distance(m_model, p);
+}
+
+double GeoModel3D::distance( point_3d p)
 {
   return boost::geometry::distance(m_model, p);
+}
+
+void GeoModel3D::debug_print()
+{
+  std::cout << boost::geometry::wkt(m_model) << std::endl;
 }

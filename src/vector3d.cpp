@@ -2,7 +2,7 @@
 #include "vector3d.h"
 
 Vector3d::Vector3d(point_3d s, point_3d e)
-: m_color(1)
+    : m_color(0.0f, 0.5f, 1.0f, 1.0f)
 , m_highlight_color(1, 1, 0, 1)
 {
   m_highlight_vector = -1;
@@ -102,6 +102,18 @@ int Vector3d::find_vector(float x, float y, float z)
   return offset;
 }
 
+std::shared_ptr<std::vector<float>> Vector3d::get_vector(int offset)
+{
+  std::shared_ptr<std::vector<float>> v
+      = std::make_shared<std::vector<float>>();
+  for(auto it=m_data.begin()+offset;
+      it != m_data.begin()+offset+NUM_OF_ELEMENT_PER_VECTOR; it++)
+  {
+    v->push_back(*it);
+  }
+  return v;
+}
+
 void Vector3d::delete_highlight_vector(
   Gl::ResourceManager &manager
 )
@@ -145,71 +157,18 @@ void Vector3d::init_gl_buffer(
 
 void Vector3d::Update(steady_clock::time_point &t_c, Gl::ResourceManager& manager)
 {
-  if (m_highlight_vector == -1)
-  {
-    manager.gl_window_update(gl_resource_id);
-    return;
-  }
   std::shared_ptr<Gl::Shader> shader_ptr =
-    manager.get_shader_from_element_id(gl_resource_id);
-
-  int offset_idx = m_highlight_vector/3;
-  int total_num_of_indices = bytes()/(3*sizeof(float));
-  int num_of_indices = NUM_OF_INDICES_PER_VECTOR;
-  if(offset_idx == 0) {
-    shader_ptr->SetUniform4f(
-      "u_Color", 
-      m_highlight_color.x,
-      m_highlight_color.y,
-      m_highlight_color.z,
-      m_highlight_color.a
-    );
-    GLCall(glLineWidth(HIGHLIGHT_LINE_WIDTH));
-    num_of_indices = NUM_OF_INDICES_PER_VECTOR;
-    manager.gl_window_update(
-      gl_resource_id,
-      offset_idx,
-      num_of_indices
-    );
-  }
-  else {
-    manager.gl_window_update(gl_resource_id, 0, offset_idx);
-
-    shader_ptr->SetUniform4f(
-      "u_Color", 
-      m_highlight_color.x,
-      m_highlight_color.y,
-      m_highlight_color.z,
-      m_highlight_color.a
-    );
-    GLCall(glLineWidth(HIGHLIGHT_LINE_WIDTH));
-    manager.gl_window_update(
-      gl_resource_id,
-      offset_idx,
-      num_of_indices
-    );
-  }
+      manager.get_shader_from_element_id(gl_resource_id);
 
   shader_ptr->SetUniform4f(
-    "u_Color", 
-    m_highlight_color.x,
-    m_highlight_color.y,
-    m_highlight_color.z,
-    m_highlight_color.a
-  );
-  GLCall(glLineWidth(1));
-  offset_idx += num_of_indices;
-  num_of_indices = total_num_of_indices - offset_idx;
-#ifdef __DEBUG__
-std::cout << "offset_idx = " << offset_idx << std::endl;
-std::cout << "num_of_indices = " << num_of_indices << std::endl;
-#endif
-
-  manager.gl_window_update(
-    gl_resource_id,
-    offset_idx,
-    num_of_indices
-  );
+      "u_Color",
+      m_color.x,
+      m_color.y,
+      m_color.z,
+      m_color.a
+                           );
+  manager.gl_window_update(gl_resource_id);
+  return;
 
 }
 
