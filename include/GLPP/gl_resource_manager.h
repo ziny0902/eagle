@@ -67,11 +67,15 @@ public:
 
   std::shared_ptr<Gl::Shader> get_shader_from_element_id(unsigned short element_id);
   std::shared_ptr<Gl::Shader> get_shader_from_shader_id(unsigned short shader_id);
-  void gl_window_update(unsigned short element_id, bool debug = false); 
+  void gl_window_update(
+      unsigned short element_id
+      , bool stancil_control = false
+      , bool debug = false);
   void gl_window_update(
     unsigned short element_id
     , int offset
     , int num_of_vertex
+    , bool stancil_control = false
     , bool debug = false
   ); 
   void resource_bind(unsigned short element_id);

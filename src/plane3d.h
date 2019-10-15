@@ -52,7 +52,6 @@ class Plane3d : public Gl::Drawable_obj{
  private:
   // OpenGL Resource.
   unsigned int m_tex_resource;
-  unsigned int ibo_resource;
   unsigned int m_shader;
   Gl::GlBuffer m_uniBuffer;
   int m_uniBuffer_id;

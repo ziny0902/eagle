@@ -38,10 +38,12 @@ target_link_libraries(graph3d
   glpp 
   geowrap 
   user_util
+  math_helper
   boost_iostreams 
   boost_serialization 
 	boost_system
 	boost_filesystem
+  gsl
   dl 
   m 
   ${FREETYPE_LIBRARIES} 

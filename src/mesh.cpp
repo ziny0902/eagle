@@ -10,17 +10,16 @@ Mesh::Mesh(int r, int c)
   ibo_fill_resource_id = -1;
   cal_func = nullptr;
 }
-void Mesh::regfunc(std::vector<float> x_range, std::vector<float> y_range, func_xy func_ptr)
+void Mesh::regfunc(std::vector<float> x_range, std::vector<float> y_range, func_uv func_ptr)
 {
   cal_func = func_ptr;
   float x_tick = (x_range[1] - x_range[0])/m_c;
   float y_tick = (y_range[1] - y_range[0])/m_r;
   for( int i = 0; i < m_r; i++){
     for(int j = 0; j < m_c; j++) {
-      glm::vec3 vertice;
-      vertice.x = x_range[0] + j*x_tick;
-      vertice.y = y_range[0] + i*y_tick;
-      vertice.z = func_ptr(vertice.x, vertice.y);
+      float u = x_range[0] + j*x_tick;
+      float v = y_range[0] + i*y_tick;
+      glm::vec3 vertice = cal_func(u, v);
       m_vertices.push_back(vertice);
     }
   }
@@ -102,6 +101,7 @@ void Mesh::Update(steady_clock::time_point &t_c, Gl::ResourceManager& manager)
   std::shared_ptr<Gl::Shader> shader = manager.get_shader_from_element_id(vao_resource_id);
   shader->Bind();
 
+  glDepthFunc(GL_LESS);
   glEnable(GL_POLYGON_OFFSET_FILL);
   glPolygonOffset(0, 1);
 
@@ -111,9 +111,17 @@ void Mesh::Update(steady_clock::time_point &t_c, Gl::ResourceManager& manager)
   glPolygonOffset(0, 0);
   glDisable(GL_POLYGON_OFFSET_FILL);
 
+  GLCall(glStencilMask(0x00));
   shader->SetUniform4f("u_Color", 4, 4, 0.8, 1);
-  manager.gl_window_update(ibo_resource_id);
+  manager.gl_window_update(ibo_resource_id, true);
 
   shader->UnBind();
 }
 
+void Mesh::set_highlight(
+    Gl::ResourceManager& manager,
+    Highlight& highlight
+                         )
+{
+  highlight.set_highlight(manager, NULL, 0, ibo_fill_resource_id, ibo_resource_id);
+}

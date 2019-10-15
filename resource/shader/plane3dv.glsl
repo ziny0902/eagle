@@ -24,14 +24,20 @@ uniform vec4 fixed_table[4];
 varying vec4 coord;
 varying vec4 color;
 
-out vec4 fixed_idx;
-
+out vec4 debug_out;
 
 mat4 scale( in float x, in float y) {
   return mat4( x, 0, 0, 0,
               0, y, 0, 0,
               0, 0, 1, 0,
               0, 0, 0, 1);
+}
+
+mat4 rotationY( in float angle ) {
+	return mat4(	cos(angle),		0,		sin(angle),	0,
+			 				0,		1.0,			 0,	0,
+					-sin(angle),	0,		cos(angle),	0,
+							0, 		0,				0,	1);
 }
 
 mat4 rotationX( in float angle ) {
@@ -57,26 +63,25 @@ void main()
           * fixed_table[int(v_idx)];
 
   coord
-  = rotationX(dynamic_table.value[int(d_idx)].v_rotate.x)
-  * rotationZ(dynamic_table.value[int(d_idx)].v_rotate.z) 
+  = 
+   rotationZ(dynamic_table.value[int(d_idx)].v_rotate.z) 
+  * rotationX(dynamic_table.value[int(d_idx)].v_rotate.x)
   * coord; 
 
   coord
   = vec4(dynamic_table.value[int(d_idx)].v_translate.xyz + coord.xyz, 1);
 
-  //coord = vec4(fixed_table[int(v_idx)]);
   color = dynamic_table.value[int(d_idx)].v_color;
 
-  //fixed_idx = dynamic_table.value[int(d_idx)].v_translate;
-  //fixed_idx = dynamic_table.value[int(d_idx)].v_rotate;
-  //fixed_idx = vec4(fixed_table[int(v_idx)], 1.0);
-  //fixed_idx = vec4(fixed_table[1]);
-  //fixed_idx = vec4(fixed_table[2], 1.0);
-  //fixed_idx = vec4(fixed_table[3], 1.0);
-  fixed_idx = coord;
-  //fixed_idx = color;
-  //fixed_idx = vec4(v_idx, d_idx, 0, 1);
-  //gl_Position = coord;
+  //debug_out= dynamic_table.value[int(d_idx)].v_translate;
+  //debug_out = dynamic_table.value[int(d_idx)].v_rotate;
+  //debug_out = vec4(fixed_table[int(v_idx)], 1.0);
+  //debug_out = vec4(fixed_table[1]);
+  //debug_out = vec4(fixed_table[2], 1.0);
+  //debug_out = vec4(fixed_table[3], 1.0);
+  //debug_out = coord;
+  //debug_out = color;
+  debug_out = vec4(v_idx, d_idx, 0, 1);
 
   gl_Position = u_MVP * rotate * coord;
 }  

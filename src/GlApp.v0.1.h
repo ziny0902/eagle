@@ -40,6 +40,7 @@ public:
     return is_object_selected;
   }
   void del_select_object();
+  void add_curvature_info(float t);
 
 private:
   int m_w, m_h;

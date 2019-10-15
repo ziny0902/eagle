@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <chrono>
+#include <memory>
 #include <glm/gtc/type_ptr.hpp>
 #include <GLPP/glBuffer.h>
 #include <GLPP/vertex_arrays.h>
@@ -9,7 +10,7 @@
 
 using namespace std::chrono;
 
-typedef glm::vec3 (*plot_func)(float );
+typedef glm::dvec3 (*plot_func)(double);
 
 class Plot3D : public Gl::Drawable_obj{
 public:
@@ -22,6 +23,10 @@ public:
   void activate_realtime();
   void deactivate_realtime();
   void activate_sampler(steady_clock::time_point &t_c, Gl::ResourceManager& manager);
+
+  std::shared_ptr<float[]> cal_func(float t);
+  std::shared_ptr<float[]> tangent_vector(float t);
+  std::shared_ptr<float[]> normal_vector(float t);
 
   // Instance of virtual function.
   void Update(steady_clock::time_point &t_c, Gl::ResourceManager& manager);
@@ -36,4 +41,5 @@ private:
   plot_func m_func_ptr;
   steady_clock::time_point m_t0;
   bool is_realtime;
+
 };

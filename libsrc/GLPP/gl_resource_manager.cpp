@@ -162,6 +162,7 @@ std::shared_ptr<Gl::Shader> ResourceManager::get_shader_from_shader_id(unsigned 
 
 void ResourceManager::gl_window_update(
     unsigned short element_id
+    , bool stencil_control
     , bool debug
                                        )
 
@@ -172,7 +173,7 @@ void ResourceManager::gl_window_update(
   }
 
   std::shared_ptr<ResourceElement> element = m_element_list[element_id];
-  gl_window_update(element_id, 0, element->num_of_vertex, debug);
+  gl_window_update(element_id, 0, element->num_of_vertex, stencil_control, debug);
 
 }
 
@@ -180,6 +181,7 @@ void ResourceManager::gl_window_update(
   unsigned short element_id
   , int offset
   , int num_of_vertex
+  , bool stencil_control
   , bool debug
 )
 {
@@ -193,7 +195,11 @@ void ResourceManager::gl_window_update(
   m_vertArray.Bind(element->vertexArray_idx);
   element->vbo->Bind();
 
-  GLCall(glStencilFunc(GL_ALWAYS, element_id, -1));
+  if(stencil_control == false)
+  {
+    GLCall(glStencilFunc(GL_ALWAYS, element_id, -1));
+    GLCall(glStencilMask(0xFF));
+  }
 
   if(element->buffer_type == GL_ARRAY_BUFFER)
   {

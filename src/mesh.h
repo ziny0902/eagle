@@ -5,13 +5,17 @@
 #include <GLPP/vertex_arrays.h>
 #include <GLPP/shader.h>
 #include <GLPP/gl_drawing_obj.h>
+#include "Highlight.h"
 
 typedef float (*func_xy)(float, float);
+
+// Parametric surfaces
+typedef glm::vec3 (*func_uv)(float, float);
 
 class Mesh : public Gl::Drawable_obj{
 public:
   Mesh(int r, int c);
-  void regfunc(std::vector<float> x_range, std::vector<float> y_range, func_xy);
+  void regfunc(std::vector<float> x_range, std::vector<float> y_range, func_uv);
 
   // Instance of virtual function.
   void Update(steady_clock::time_point &t_c, Gl::ResourceManager& manager);
@@ -26,8 +30,9 @@ public:
       return true;
     return false;
   }
+  void set_highlight(Gl::ResourceManager& manager, Highlight& highlight);
   
-  func_xy cal_func;
+  func_uv cal_func;
 
 private:
   int m_r, m_c; //number of row, col

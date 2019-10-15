@@ -167,6 +167,7 @@ void Vector3d::Update(steady_clock::time_point &t_c, Gl::ResourceManager& manage
       m_color.z,
       m_color.a
                            );
+  glDepthFunc(GL_LESS);
   manager.gl_window_update(gl_resource_id);
   return;
 

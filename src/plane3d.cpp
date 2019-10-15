@@ -35,7 +35,7 @@ void Plane3d::update_gl_data(
     , glm::vec3& translate
                       )
 {
-  unsigned int offset = m_dynamic.size() * sizeof(unsigned int);
+  unsigned int offset = m_dynamic.size() * sizeof(float);
   unsigned int idx = m_dynamic.size();
   add_dynamic_data(color, scale, rotate, translate);
 
@@ -82,6 +82,7 @@ void Plane3d::add_dynamic_data(
   ADD_VEC_2(m_dynamic, 3, tex_offset);
   ADD_VEC_2(m_dynamic, 1, tex_offset);
   ADD_VEC_2(m_dynamic, 2, tex_offset);
+
 }
 Plane3d::Plane3d() :
     m_uniBuffer(NULL, 0, GL_UNIFORM_BUFFER)
@@ -101,13 +102,15 @@ void Plane3d::Update(
   std::shared_ptr<Gl::Shader> shader_ptr =
       manager.get_shader_from_element_id(gl_resource_id);
   shader_ptr->Bind();
+
   GLCall(glEnable(GL_BLEND));
   GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
-  GLCall(glDepthFunc(GL_ALWAYS))
+  glDepthFunc(GL_LESS);
 
-  manager.gl_window_update(gl_resource_id, false);
+  manager.gl_window_update(gl_resource_id, false, false);
 
   GLCall(glDisable(GL_BLEND));
+
   shader_ptr->UnBind();
 }
 
@@ -118,30 +121,26 @@ void Plane3d::init_gl_buffer(
                     )
 {
   int vertArray_id = manager.request_gl_alloc_vertexArray();
-  if(m_dynamic.size() == 0){
-    gl_resource_id = manager.request_gl_vbo_data(
-      NULL,
-      1024,
-      0,
-      GL_ARRAY_BUFFER,
-      layout,
-      GL_TRIANGLES,
-      shader_id,
-      vertArray_id
-    );
+  unsigned char *buffer = NULL;
+  int bytes = 1024;
+  int num_of_vertex = 0;
+
+  if(m_dynamic.size() != 0) {
+    buffer = (unsigned char *)&m_dynamic[0];
+    bytes = m_dynamic.size()*sizeof(float);
+    num_of_vertex = m_dynamic.size()/2;
   }
-  else{
-    gl_resource_id = manager.request_gl_vbo_data(
-      (unsigned char *)&m_dynamic[0],
-      m_dynamic.size() * sizeof(float),
-      m_dynamic.size()/2,
-      GL_ARRAY_BUFFER,
-      layout,
-      GL_TRIANGLES,
-      shader_id,
-      vertArray_id
-    );
-  }
+  gl_resource_id = manager.request_gl_vbo_data(
+    buffer,
+    bytes ,
+    num_of_vertex,
+    GL_ARRAY_BUFFER,
+    layout,
+    GL_TRIANGLES,
+    shader_id,
+    vertArray_id
+  );
+
 }
 
 void Plane3d::init_gl_buffer(
@@ -325,6 +324,7 @@ bool Plane3d::set_selected_plane(
       v.push_back(arr[i+2]);
     }
   }
+#ifdef __DEBUG__
   for(int i=0; i < v.size(); i+=3)
   {
     std::cout << "("
@@ -335,6 +335,7 @@ bool Plane3d::set_selected_plane(
               << v[i+2]
               << ")\n";
   }
+#endif
   highlight.set_highlight(
       manager
       , (unsigned char *)&v[0]

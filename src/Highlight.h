@@ -28,4 +28,5 @@ class Highlight : public Gl::Drawable_obj{
   glm::vec4 m_color;
   unsigned int m_selected_oid;
   unsigned int m_sub_id;
+  bool is_delegated;
 };

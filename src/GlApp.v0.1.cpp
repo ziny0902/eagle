@@ -2,12 +2,13 @@
 #include <string>
 #include <fstream>
 #include <cmath>
-#include <GLPP/util.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <boost/format.hpp>
 #include <gtk/gtk.h>
+#include <GLPP/util.h>
+#include <Math/multivcalculus.h>
 #include "GlApp.v0.1.h"
 
 #define NUM_OF_COORDI   3
@@ -111,10 +112,11 @@ void GlApp3D::StartUp(IniManager &ini)
 	m_figure_enabled = ini.get_boolean("GlApp", "figure_enabled");
 	m_vector_enabled = ini.get_boolean("GlApp", "vector_enabled");
 // end initialization
-	
-	glm::vec3 (*plot3d_fn)(float) = nullptr;
+
+  plot_func plot3d_fn = nullptr;
+	// glm::dvec3 (*plot3d_fn)(double) = nullptr;
 	glm::vec3 (*figure_fn)(float) = nullptr;
-	float (*mesh_fn)(float, float) = nullptr;
+  glm::vec3 (*mesh_fn)(float, float) = nullptr;
 
 // load dynamic function.
 {
@@ -130,11 +132,11 @@ void GlApp3D::StartUp(IniManager &ini)
 	}
 
 	if(plot3d_fn_str != nullptr)
-		plot3d_fn =  (glm::vec3(*)(float))dlsym(lib_handle, plot3d_fn_str->c_str());
+		plot3d_fn =  (plot_func)dlsym(lib_handle, plot3d_fn_str->c_str());
 	if(figure_fn_str != nullptr)
 		figure_fn =  (glm::vec3(*)(float))dlsym(lib_handle, figure_fn_str->c_str());
 	if(mesh_fn_str != nullptr)
-		mesh_fn =  (float(*)(float, float))dlsym(lib_handle, mesh_fn_str->c_str());
+		mesh_fn =  (glm::vec3(*)(float, float))dlsym(lib_handle, mesh_fn_str->c_str());
 
 	char *error;
 	if ((error = dlerror()) != NULL)  
@@ -297,6 +299,7 @@ void GlApp3D::Draw()
   shader_ptr->Bind();
 
   shader_ptr->SetUniformMatrix4fv("trans", Identity);
+  shader_ptr->SetUniformMatrix4fv("scale", Identity);
   // Draw x, y, z axis 
   shader_ptr->SetUniform4f("u_Color", 1.0f, 0.0f, 0.0f, 1.0f); 
   m_x_axis.Update(t_p, m_manager);
@@ -326,16 +329,15 @@ void GlApp3D::Draw()
     m_mesh.Update(t_p, m_manager);
   }
 
-  m_plane3d.Update(t_p, m_manager);
-
   if(is_object_selected)
     m_highlight.Update(t_p, m_manager);
   else
     m_highlight.clear();
 
+  m_plane3d.Update(t_p, m_manager);
+
   m_gl_window.update();
 
-  glFlush();
 }
 
 void GlApp3D::display_pixel_info(int x, int y)
@@ -424,15 +426,24 @@ void GlApp3D::post_pixel_sel(
 {
   if(m_highlight.is_match(id)){
     is_object_selected = true;
-    id = m_highlight.get_oid();
+    // id = m_highlight.get_oid();
   }
 
   if (m_plot3d.is_match(id)) {
     msg.append("plot3d\n");
+    is_object_selected = true;
+    m_highlight.set_highlight(
+        m_manager
+        , NULL
+        , 0
+        , id
+        , id
+                              );
   }
   if (m_mesh.is_match(id)) {
     msg.append("mesh\n");
-    z = m_mesh.cal_func(x, y);
+    m_mesh.set_highlight(m_manager, m_highlight);
+    is_object_selected = true;
   }
   if (m_vector3d.is_match(id)) {
     is_object_selected = true;
@@ -488,6 +499,31 @@ std::cout << "add_vector" << std::endl;
     {s.x, s.y, s.z},
     {e.x, e.y, e.z}
   );
+}
+
+void GlApp3D::add_curvature_info(float t)
+{
+  std::shared_ptr<float[]> T, N, B, p0;
+  const long l = 2;
+  T = m_plot3d.tangent_vector(t);
+  N = m_plot3d.normal_vector(t);
+  B = MathHelper::get_binormal_v(&T[0], &N[0]);
+  p0 = m_plot3d.cal_func(t);
+  m_vector3d.add_vector(
+      m_manager,
+      {p0[0], p0[1], p0[2]}
+      , {p0[0]+T[0]*l, p0[1]+T[1]*l, p0[2] + T[2]*l}
+  );
+  m_vector3d.add_vector(
+      m_manager,
+      {p0[0], p0[1], p0[2]}
+      , {p0[0]+N[0]*l, p0[1]+N[1]*l, p0[2] + N[2]*l}
+                        );
+  m_vector3d.add_vector(
+      m_manager,
+      {p0[0], p0[1], p0[2]}
+      , {p0[0]+B[0]*l, p0[1]+B[1]*l, p0[2] + B[2]*l}
+                        );
 }
 
 void GlApp3D::add_plane(
