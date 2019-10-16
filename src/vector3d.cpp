@@ -2,7 +2,7 @@
 #include "vector3d.h"
 
 Vector3d::Vector3d(point_3d s, point_3d e)
-    : m_color(0.0f, 0.5f, 1.0f, 1.0f)
+    : m_color(1.0f, 1.0f, 1.0f, 1.0f)
 , m_highlight_color(1, 1, 0, 1)
 {
   m_highlight_vector = -1;
@@ -87,13 +87,13 @@ point_3d s, point_3d e
 int Vector3d::find_vector(float x, float y, float z)
 {
   size_t len = m_data.size();
-  int c_distance = std::numeric_limits<int>::max();
+  double c_distance = std::numeric_limits<int>::max();
   int offset = 0;
   for(int i = 0; i < len; i += NUM_OF_ELEMENT_PER_VECTOR) {
     geo::GeoModel3D vector3d;
     vector3d.append({m_data[i], m_data[i+1], m_data[i+2]});
     vector3d.append({m_data[i+3], m_data[i+4], m_data[i+5]});
-    int distance = vector3d.distance({x, y, z});
+    double distance = vector3d.distance({x, y, z});
     if( distance < c_distance ) {
       offset = i;
       c_distance = distance;

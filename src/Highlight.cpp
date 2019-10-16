@@ -35,9 +35,9 @@ void Highlight::Update(steady_clock::time_point &t_c, Gl::ResourceManager& manag
   GLCall(glLineWidth(3));
   glDepthFunc(GL_LESS);
 
-  // glStencilFunc(GL_NOTEQUAL, m_selected_oid, 0xFF);
 
   if(is_delegated){
+    // glStencilFunc(GL_NOTEQUAL, m_selected_oid, 0xFF);
     manager.gl_window_update(m_sub_id, false);
   }
   else

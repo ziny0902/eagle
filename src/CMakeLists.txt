@@ -24,6 +24,7 @@ add_executable(graph3d
                     Plane3dAddDig.cpp
                     plane3d.cpp
                     Highlight.cpp
+                    Plot3dDig.cpp
                     )
 
 target_include_directories(graph3d PUBLIC 

@@ -27,13 +27,21 @@ static unsigned short box3d_indices[NUM_OF_BOX_INDICES] = {
 
 #define NUM_OF_BOX_FILL_INDICES 36
 static unsigned short box3d_fill_indices[] = {
-4, 5, 6, 4, 7, 6,
-7, 4, 0, 7, 3, 0,
-1, 0, 4, 4, 5, 1,
-2, 1, 5, 2, 6, 5,
-7, 3, 2, 7, 5, 2,
-0, 1, 2, 0, 2, 3
+  0, 1, 5, 5, 4, 0
+  , 6, 5, 1, 1, 2, 6
+  , 4, 5, 7, 7, 5, 6
+  , 4, 0, 3, 3, 7, 4
+  , 1, 0, 3, 3, 2, 1
+  , 3, 2, 6, 6, 7, 3
 };
+// static unsigned short box3d_fill_indices[] = {
+// 4, 5, 6, 4, 7, 6,
+// 7, 4, 0, 7, 3, 0,
+// 1, 0, 4, 4, 5, 1,
+// 2, 1, 5, 2, 6, 5,
+// 7, 3, 2, 7, 5, 2,
+// 0, 1, 2, 0, 2, 3
+// };
 
 void Object3D::init_obj(std::string &wkt)
 {
@@ -155,11 +163,16 @@ void Object3D::Update(steady_clock::time_point &t_c, Gl::ResourceManager& manage
 {
   std::shared_ptr<Gl::Shader> shader = manager.get_shader_from_element_id(vao_resource_id);
 
-  shader->SetUniform4f("u_Color", 0.5, 0.5, 0.5, 1);
+  glDepthFunc(GL_LESS);
+  glEnable(GL_POLYGON_OFFSET_FILL);
+  glPolygonOffset(1, 1);
+  shader->SetUniform4f("u_Color", 0.5, 0, 0.5, 1);
   manager.gl_window_update(ibo_fill_id);
 
 
-  shader->SetUniform4f("u_Color", 4, 4, 0.8, 1);
+  glPolygonOffset(0, 0);
+  glDisable(GL_POLYGON_OFFSET_FILL);
+  shader->SetUniform4f("u_Color", 1, 1, 1, 1);
   manager.gl_window_update(ibo_resource_id);
 }
 

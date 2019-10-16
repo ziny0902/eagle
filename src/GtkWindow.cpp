@@ -5,6 +5,7 @@
 #include "GtkWindow.h"
 #include "VectorAddDialog.h"
 #include "Plane3dAddDig.h"
+#include "Plot3dDig.h"
 
 using std::cerr;
 using std::endl;
@@ -133,6 +134,21 @@ void GtkAppWindow::on_del_object()
   gtk_gl_area_queue_render(m_gl_area.gobj());
 }
 
+void GtkAppWindow::on_add_TNB_frame()
+{
+  Plot3dDig dig;
+  int ret = dig.run();
+  if(ret == Gtk::RESPONSE_CANCEL) return; 
+
+  m_gl_area.make_current();
+  m_gl_app->add_TNB_frame(dig.get_parameter()
+                          , dig.get_selected()
+                          , dig.get_selected_plane()
+                          , dig.get_plane_color()
+                          );
+  gtk_gl_area_queue_render(m_gl_area.gobj());
+}
+
 void GtkAppWindow::create_pop_menu()
 {
   m_menu_popup = new Gtk::Menu;
@@ -154,6 +170,12 @@ void GtkAppWindow::create_pop_menu()
     sigc::mem_fun(this, &GtkAppWindow::on_del_object)
   );
   m_menu_popup->append(*m_del_object_menu);
+
+  item= new Gtk::MenuItem("Add TNB frame");
+  item->signal_activate().connect(
+      sigc::mem_fun(this, &GtkAppWindow::on_add_TNB_frame)
+                                               );
+  m_menu_popup->append(*item);
 
   m_menu_popup->show_all();
 }

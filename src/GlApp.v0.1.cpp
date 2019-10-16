@@ -466,6 +466,7 @@ void GlApp3D::post_pixel_sel(
         = boost::format("vector3d\n"
        "(%s, %s, %s)\n(%s, %s, %s)\n") 
         % sp.x % sp.y % sp.z % ep.x % ep.y % ep.z;
+      std::cout << fmt.str();
       msg.append(fmt.str());
       return;
     }
@@ -501,29 +502,60 @@ std::cout << "add_vector" << std::endl;
   );
 }
 
-void GlApp3D::add_curvature_info(float t)
+void GlApp3D::add_TNB_frame(float t
+                    , unsigned short sel_vector
+                    , unsigned short sel_plane
+                    , glm::vec4 plane_color
+                    )
 {
   std::shared_ptr<float[]> T, N, B, p0;
-  const long l = 2;
+  const long l = 1;
   T = m_plot3d.tangent_vector(t);
   N = m_plot3d.normal_vector(t);
   B = MathHelper::get_binormal_v(&T[0], &N[0]);
   p0 = m_plot3d.cal_func(t);
-  m_vector3d.add_vector(
-      m_manager,
-      {p0[0], p0[1], p0[2]}
-      , {p0[0]+T[0]*l, p0[1]+T[1]*l, p0[2] + T[2]*l}
-  );
-  m_vector3d.add_vector(
-      m_manager,
-      {p0[0], p0[1], p0[2]}
-      , {p0[0]+N[0]*l, p0[1]+N[1]*l, p0[2] + N[2]*l}
-                        );
-  m_vector3d.add_vector(
-      m_manager,
-      {p0[0], p0[1], p0[2]}
-      , {p0[0]+B[0]*l, p0[1]+B[1]*l, p0[2] + B[2]*l}
-                        );
+
+  std::cout << "selected vector : " << sel_vector << "\n";
+  std::cout << "selected plane : " << sel_plane << "\n";
+
+  if(sel_vector & 0x01)
+    m_vector3d.add_vector(
+        m_manager,
+        {p0[0], p0[1], p0[2]}
+        , {p0[0]+T[0]*l, p0[1]+T[1]*l, p0[2] + T[2]*l}
+    );
+  if(sel_vector & 0x02)
+    m_vector3d.add_vector(
+        m_manager,
+        {p0[0], p0[1], p0[2]}
+        , {p0[0]+N[0]*l, p0[1]+N[1]*l, p0[2] + N[2]*l}
+                          );
+  if(sel_vector & 0x04)
+    m_vector3d.add_vector(
+        m_manager,
+        {p0[0], p0[1], p0[2]}
+        , {p0[0]+B[0]*l, p0[1]+B[1]*l, p0[2] + B[2]*l}
+                          );
+  glm::vec3 TV(T[0], T[1], T[2]);
+  glm::vec3 BV(B[0], B[1], B[2]);
+  glm::vec3 NV(N[0], N[1], N[2]);
+  glm::vec3 C(p0[0], p0[1], p0[2]);
+  if(sel_plane & 0x01)
+    add_plane( TV, BV , C
+              , 1, 1
+              , plane_color
+              );
+  if(sel_plane & 0x02)
+    add_plane( TV, NV , C
+               , 1, 1
+               , plane_color
+               );
+  if(sel_plane & 0x04)
+    add_plane( BV, NV , C
+               , 1, 1
+               , plane_color
+               );
+
 }
 
 void GlApp3D::add_plane(

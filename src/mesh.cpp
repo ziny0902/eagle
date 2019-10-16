@@ -103,7 +103,7 @@ void Mesh::Update(steady_clock::time_point &t_c, Gl::ResourceManager& manager)
 
   glDepthFunc(GL_LESS);
   glEnable(GL_POLYGON_OFFSET_FILL);
-  glPolygonOffset(0, 1);
+  glPolygonOffset(1, 1);
 
   shader->SetUniform4f("u_Color", 0.5, 0.5, 0.5, 1);
   manager.gl_window_update(ibo_fill_resource_id);

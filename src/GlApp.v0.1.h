@@ -40,7 +40,11 @@ public:
     return is_object_selected;
   }
   void del_select_object();
-  void add_curvature_info(float t);
+  void add_TNB_frame(float t
+                     , unsigned short sel_vector
+                     , unsigned short sel_plane
+                     , glm::vec4 plane_color
+                     );
 
 private:
   int m_w, m_h;
