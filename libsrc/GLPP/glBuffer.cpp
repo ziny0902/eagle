@@ -2,19 +2,28 @@
 
 using namespace Gl;
 
-GlBuffer::GlBuffer()
+GlBuffer::GlBuffer(bool queue_enabled)
 {
   GLCall(glGenBuffers(1, &m_RendererId));
   m_size = 0;
   m_data_cnt = 0;
+  m_queue_idx = 0;
+  m_queue_enabled = queue_enabled;
   m_type = GL_ARRAY_BUFFER;
 }
 
-GlBuffer::GlBuffer(const void *data, unsigned int size, GLenum type)
+
+GlBuffer::GlBuffer(const void *data
+                   , unsigned int size
+                   , GLenum type
+                   , bool queue_enabled
+                   )
 {
   m_type = type;
   m_size = 0;
   m_data_cnt = 0;
+  m_queue_idx = 0;
+  m_queue_enabled = queue_enabled;
 
   GLCall(glGenBuffers(1, &m_RendererId));
   GLCall(glBindBuffer(m_type, m_RendererId));
@@ -48,11 +57,31 @@ void GlBuffer::SetGlSubBuffer(const void *data, unsigned int size, unsigned int 
 
 bool GlBuffer::AddData(const void *data, unsigned int size )
 {
+  Bind();
+  if(m_queue_enabled)
+  {
+    if(m_size <= (m_data_cnt + size)) {
+      int extra_bytes = (m_data_cnt+size) - m_size;
+      if(extra_bytes > m_size){
+        std::cout << "Error: Queue Overflow\n";
+        return false;
+      }
+      GLCall(glBufferSubData(m_type, m_data_cnt, size-extra_bytes, data ));
+      GLCall(glBufferSubData(m_type, 0, size, data ));
+      m_data_cnt = m_queue_idx = size;
+    }
+    else{
+      GLCall(glBufferSubData(m_type, m_data_cnt, size, data ));
+      if(m_queue_idx == m_data_cnt && m_data_cnt != 0)
+        m_queue_idx += size;
+      m_data_cnt += size;
+    }
+    return true;
+  }
   if(m_size < (m_data_cnt + size)) {
     std::cout << "("<< m_size << ")" << " not enough buffer" << std::endl;
     return false;
   }
-  Bind();
   GLCall(glBufferSubData(m_type, m_data_cnt, size, data ));
   m_data_cnt += size;
   return true;

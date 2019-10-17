@@ -67,7 +67,8 @@ int ResourceManager::request_gl_vbo_data(unsigned char* data,
                     const VertexBufferLayout& layout,
                     GLenum glprimitive_mode,
                     unsigned short shader_idx,
-                    unsigned short vertexA_idx
+                    unsigned short vertexA_idx,
+                    bool queue_enabled
                     )
 {
   m_shader_list[shader_idx]->Bind();
@@ -77,7 +78,7 @@ int ResourceManager::request_gl_vbo_data(unsigned char* data,
   element->num_of_vertex = num_of_vertex;
   element->buffer_type = buffer_type;
   element->mode = glprimitive_mode;
-  element->vbo = std::make_shared<Gl::GlBuffer>();
+  element->vbo = std::make_shared<Gl::GlBuffer>(queue_enabled);
   element->shader = m_shader_list[shader_idx];
   element->vertexArray_idx = vertexA_idx;
   element->vbo->AddCapacity(buffer_type, data_bytes);
@@ -124,19 +125,23 @@ bool ResourceManager::add_gl_vbo_data(
 
   bool ret;
   std::shared_ptr<ResourceElement> element = m_element_list[element_id];
+  element->bytes_per_vertex = (int)data_bytes/num_of_vertex;
 
   m_vertArray.Bind(element->vertexArray_idx);
   ret = element->vbo->AddData(data, data_bytes);
   if( ret == false ){ 
     element->vbo->AddCapacity(
       element->buffer_type, 
-      ((element->num_of_vertex * (int)(data_bytes/num_of_vertex)) + 1024*sizeof(float)*3)
+      ((element->num_of_vertex * element->bytes_per_vertex) + 64 * element->bytes_per_vertex)
     );
     m_vertArray.UnBind();
     return false;
   }
   m_vertArray.UnBind();
-  element->num_of_vertex += num_of_vertex;
+  if(element->vbo->get_queue_index() == 0)
+    element->num_of_vertex += num_of_vertex;
+  else
+    element->num_of_vertex = element->vbo->size()/element->bytes_per_vertex;
   return true;
 }
 
@@ -173,7 +178,23 @@ void ResourceManager::gl_window_update(
   }
 
   std::shared_ptr<ResourceElement> element = m_element_list[element_id];
-  gl_window_update(element_id, 0, element->num_of_vertex, stencil_control, debug);
+
+  unsigned int queue_idx = element->vbo->get_queue_index();
+  if(queue_idx != 0){
+    unsigned int num_of_vertex = element->num_of_vertex;
+    num_of_vertex = num_of_vertex - queue_idx/element->bytes_per_vertex;
+    gl_window_update(element_id
+                     , queue_idx/element->bytes_per_vertex
+                     , num_of_vertex
+                     , stencil_control
+                     , debug);
+    gl_window_update(element_id
+                     , 0
+                     , queue_idx/element->bytes_per_vertex
+                     , stencil_control, debug);
+  }
+  else
+    gl_window_update(element_id, 0, element->num_of_vertex, stencil_control, debug);
 
 }
 

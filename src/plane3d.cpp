@@ -72,7 +72,18 @@ void Plane3d::add_dynamic_data(
   ADD_VEC_3(m_tex, rotate.x, rotate.y, rotate.z);
   ADD_VEC_3(m_tex, translate.x, translate.y, translate.z);
   int bytes = (m_tex.size() - tex_offset) * sizeof(float);
-  m_uniBuffer.AddData((unsigned char *)&m_tex[tex_offset], bytes);
+  bool ret = m_uniBuffer.AddData((unsigned char *)&m_tex[tex_offset], bytes);
+  if(ret == false){
+    m_uniBuffer.AddCapacity(
+        GL_UNIFORM_BUFFER
+        , m_tex.size()*sizeof(float)
+        + 64*sizeof(float)*4
+                            );
+    m_uniBuffer.SetGlBuffer((unsigned char *)&m_tex[0],
+                            m_tex.size()*sizeof(float),
+                            GL_UNIFORM_BUFFER
+                            );
+  }
 
   // vertex buffer data
   tex_offset = tex_offset/(4*4);
@@ -122,7 +133,7 @@ void Plane3d::init_gl_buffer(
 {
   int vertArray_id = manager.request_gl_alloc_vertexArray();
   unsigned char *buffer = NULL;
-  int bytes = 1024;
+  int bytes = sizeof(float)*2*256;
   int num_of_vertex = 0;
 
   if(m_dynamic.size() != 0) {

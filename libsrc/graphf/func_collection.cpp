@@ -46,14 +46,14 @@ extern "C" glm::dvec3 plot_3df(double t)
   return glm::dvec3(x, y, z);
 }
 
-extern "C" glm::vec3 projectilef(double t)
+extern "C" glm::dvec3 projectilef(double t)
 {
   static quantity<si::velocity> v_0 = 38 * meter_per_second;
   static quantity<plane_angle> alpha = (M_PI/2.2)*radians;
   quantity<si::time> _t = t * second;
   quantity<si::length> x =(v_0 * std::cos(alpha.value())) * _t;
   quantity<si::length> y = (v_0 * std::sin(alpha.value())) * _t - 0.5*G * _t * _t;
-  return glm::vec3(x.value()/10.0, y.value()/10.0, 0);
+  return glm::dvec3(x.value()/10.0, y.value()/10.0, 0);
 }
 
 extern "C" glm::vec3 hookes_law(float t)

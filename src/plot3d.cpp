@@ -68,13 +68,15 @@ void Plot3D::activate_sampler(steady_clock::time_point &t_c, Gl::ResourceManager
   float t = ((float)(t_d.count())/1000);
   glm::dvec3 f_t= m_func_ptr(t);
   if(f_t.y <= 0) deactivate_realtime();
+
+  int offset = m_data.size();
   m_data.push_back((float)f_t.x);
   m_data.push_back((float)f_t.y);
   m_data.push_back((float)f_t.z);
 
   bool ret = manager.add_gl_vbo_data(
     gl_resource_id,
-    (unsigned char *) (&f_t.x),
+    (unsigned char *) &m_data[offset],
     sizeof(float)*3,
     1
   );
@@ -98,23 +100,31 @@ void Plot3D::init_gl_buffer(
 {
   int vertArray_id = manager.request_gl_alloc_vertexArray();
   int buffer_size = 0;
+  int num_of_vertex = 0;
+  unsigned char * buffer = (unsigned char *)&m_data[0];
 
   if(m_data.size() == 0 ) {
-    buffer_size = 256*sizeof(float);  
+    buffer_size = 64*3*sizeof(float); 
+    buffer = NULL;
+    num_of_vertex = 0;
   }
   else {
     buffer_size = m_data.size()*sizeof(float);
+    num_of_vertex = buffer_size/(3*sizeof(float));
   }
 
+
   gl_resource_id = manager.request_gl_vbo_data(
-        (unsigned char *)&m_data[0],
+        buffer,
         buffer_size,
-        buffer_size/(3*sizeof(float)),
+        num_of_vertex,
         GL_ARRAY_BUFFER,
         layout,
         GL_LINE_STRIP,
         shader_id,
-        vertArray_id 
+        vertArray_id,
+        is_realtime
+        // false
         );
 }
 

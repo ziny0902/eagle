@@ -162,14 +162,18 @@ void GlApp3D::StartUp(IniManager &ini)
 	}
 
 	if(m_plot3d_enabled && plot3d_fn != nullptr && plot3d_range != nullptr) {
+    bool real_time = ini.get_boolean("GlApp", "real_time_enabled");
 		m_plot3d.regfunc(plot3d_fn);
-		m_plot3d.sampling(
-			(float)(*plot3d_range)[0], 
-			(float)(*plot3d_range)[1], 
-			(float)(*plot3d_range)[2]
-		);
+    if(real_time){
+      m_plot3d.activate_realtime();
+    }
+    else
+      m_plot3d.sampling(
+        (float)(*plot3d_range)[0], 
+        (float)(*plot3d_range)[1], 
+        (float)(*plot3d_range)[2]
+      );
 		m_plot3d.init_gl_buffer(m_manager, layout, m_shader);
-		// m_plot3d.activate_realtime();
 	}
 	else{
 		m_plot3d_enabled = false;

@@ -71,9 +71,9 @@ int Plot3dDig::run()
   if(N) m_flag |= PLOT_DIG_N_FLAG;
   if(B) m_flag |= PLOT_DIG_B_FLAG;
 
-  if(TB) m_sel_plane = 0x01;
-  if(TN) m_sel_plane = 0x02;
-  if(BN) m_sel_plane = 0x04;
+  if(TB) m_sel_plane |= 0x01;
+  if(TN) m_sel_plane |= 0x02;
+  if(BN) m_sel_plane |= 0x04;
 
   delete m_dialog;
   m_dialog = nullptr;

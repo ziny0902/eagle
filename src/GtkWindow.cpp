@@ -434,7 +434,9 @@ void GtkAppWindow::on_glarea_realize()
   m_gl_app = std::make_shared<GlApp3D>(m_ini);
   m_gl_app->StartUp(m_ini);
   m_gl_app->set_window_size(m_gl_area.get_width(), m_gl_area.get_height());
-  //Glib::signal_timeout().connect( sigc::mem_fun(*this, &GtkAppWindow::on_timeout), 33);
+  bool real_time = m_ini.get_boolean("GlApp", "real_time_enabled");
+  if(real_time)
+    Glib::signal_timeout().connect( sigc::mem_fun(*this, &GtkAppWindow::on_timeout), 33);
   on_translate_changed();
   on_rotate_changed();
   on_lookat_changed();

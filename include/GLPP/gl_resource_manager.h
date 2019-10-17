@@ -10,6 +10,7 @@
 namespace Gl{
 struct ResourceElement{
   unsigned int num_of_vertex; 
+  unsigned int bytes_per_vertex;
   unsigned int vertexArray_idx;
   GLenum mode;
   GLenum buffer_type;
@@ -47,7 +48,8 @@ public:
                       const Gl::VertexBufferLayout& layout,
                       GLenum glprimitive_mode,
                       unsigned short shader_idx,
-                      unsigned short vertexA_idx
+                      unsigned short vertexA_idx,
+                      bool queue_enabled = false
                       );
 
   void replace_gl_vbo_data(
