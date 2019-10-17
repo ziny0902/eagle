@@ -7,8 +7,15 @@
 namespace MathHelper{
 
 typedef double (*cal_func)(double *);
+typedef double (*cal_v_func)(double *, int idx);
 typedef double (*parametric_func)(double, int idx);
 typedef glm::dvec3 (*parametric_v_func)(double);
+
+struct v_function_param{
+  cal_v_func f;
+  size_t idx;
+  double *val;
+};
 
 struct function_param{
   cal_func f;
@@ -28,6 +35,16 @@ template <>
 void v_2_u<2>(const double *s, double *t);
 template <>
 void v_2_u<3>(const double *s, double *t);
+
+double partial(cal_func f, double *v, int idx);
+template<size_t d>
+double partial(cal_v_func f, double *v, int idx);
+template<>
+double partial<0>(cal_v_func f, double *v, int idx);
+template<>
+double partial<1>(cal_v_func f, double *v, int idx);
+template<>
+double partial<2>(cal_v_func f, double *v, int idx);
 
 std::vector<double> gradiant(MathHelper::cal_func f, double *v, const size_t dimention);
 

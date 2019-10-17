@@ -55,10 +55,81 @@ double f_parametric(double t, int idx)
   return 0;
 }
 
+double f_ex_11_3_2(double* xy)
+{
+  return 4 - xy[0]*xy[0] - 2*xy[1]*xy[1];
+}
+
+double f_ex_11_4_1(double* xy)
+{
+  return 2*xy[0]*xy[0] + xy[1]*xy[1];
+}
+
+double f_ex_11_4_2(double* xy)
+{
+  return xy[0]*std::exp(xy[0]*xy[1]);
+}
+
+double f_ex_11_4_7(double* xy, int idx)
+{
+  if(idx == 0)
+    return xy[0]*xy[0];
+  if(idx == 1)
+    return xy[1]*xy[1];
+  if(idx == 2)
+    return xy[0] + 2*xy[1];
+  std::cout << "Critical Error: dimention error: " << idx << "\n";
+  exit(-1);
+  return -1;
+}
+
+double f_ex_11_5_1(double* xy, int idx)
+{
+  if(idx == 0)
+    return std::sin(2*xy[0]);
+  if(idx == 1)
+    return std::cos(xy[0]);
+  if(idx == 2)
+    return std::sin(2*xy[0])*std::sin(2*xy[0])*std::cos(xy[0]) +
+        3*std::sin(2*xy[0])*std::pow(std::cos(xy[0]), 2);
+  std::cout << "Critical Error: dimention error: " << idx << "\n";
+  exit(-1);
+  return -1;
+}
+
+
 using namespace MathHelper;
 
 int main()
 {
+  double xy[] = {1, 1};
+  std::cout << "Dx: " << partial(f_ex_11_3_2, xy, 0) << std::endl;
+  std::cout << "Dy: " << partial(f_ex_11_3_2, xy, 1) << std::endl;
+
+  std::cout << "Dx: " << partial(f_ex_11_4_1, xy, 0) << std::endl;
+  std::cout << "Dy: " << partial(f_ex_11_4_1, xy, 1) << std::endl;
+
+  xy[0]=1; xy[1]=0;
+  std::cout << "Dx: " << partial(f_ex_11_4_2, xy, 0) << std::endl;
+  std::cout << "Dy: " << partial(f_ex_11_4_2, xy, 1) << std::endl;
+
+  xy[0]=1; xy[1]=1;
+  std::cout << "r_u: "
+            << partial<0>(f_ex_11_4_7, xy, 0) <<" i + "
+            << partial<1>(f_ex_11_4_7, xy, 0) <<" j + "
+            << partial<2>(f_ex_11_4_7, xy, 0) <<" k "
+            << std::endl;
+
+  std::cout << "r_v: "
+            << partial<0>(f_ex_11_4_7, xy, 1) <<" i + "
+            << partial<1>(f_ex_11_4_7, xy, 1) <<" j + "
+            << partial<2>(f_ex_11_4_7, xy, 1) <<" k "
+            << std::endl;
+
+  xy[0] =0;
+  std::cout << "Dz: " << partial<2>(f_ex_11_5_1, xy, 0) << "\n";
+
+
   double v[] = {2, 0};
   double d[] = {-1.5, 2};
   double u[2];

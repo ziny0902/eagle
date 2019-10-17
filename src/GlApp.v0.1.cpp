@@ -197,7 +197,7 @@ void GlApp3D::StartUp(IniManager &ini)
 void GlApp3D::ChangeLookAt(float x, float y, float z)
 {
   m_view = glm::lookAt(glm::vec3(x, y, z ), 
-                   glm::vec3(x, y, z - 1), 
+                   glm::vec3(0, 0, 0), 
                    glm::vec3(0.0, 1.0, 0.0));
   m_projection = glm::perspective(
     45.0f,

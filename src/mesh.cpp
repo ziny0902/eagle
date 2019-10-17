@@ -15,37 +15,37 @@ void Mesh::regfunc(std::vector<float> x_range, std::vector<float> y_range, func_
   cal_func = func_ptr;
   float x_tick = (x_range[1] - x_range[0])/m_c;
   float y_tick = (y_range[1] - y_range[0])/m_r;
-  for( int i = 0; i < m_r; i++){
-    for(int j = 0; j < m_c; j++) {
+  for( int i = 0; i <= m_r; i++){
+    for(int j = 0; j <= m_c; j++) {
       float u = x_range[0] + j*x_tick;
       float v = y_range[0] + i*y_tick;
       glm::vec3 vertice = cal_func(u, v);
       m_vertices.push_back(vertice);
     }
   }
+  for (int y = 0; y <= m_r; y++) {
+    for (int x = 0; x < m_c; x++) {
+      m_indices.push_back(y * (m_c+1) + x);
+      m_indices.push_back(y * (m_c+1) + x + 1);
+    }
+  }
+
+  for (int x = 0; x <= m_c; x++) {
+    for (int y = 0; y < m_r; y++) {
+      m_indices.push_back(y * (m_r+1) + x);
+      m_indices.push_back((y+1) * (m_r+1) + x);
+    }
+  }
+
   for (int y = 0; y < m_r; y++) {
-    for (int x = 0; x < m_c-1; x++) {
-      m_indices.push_back(y * m_r + x);
-      m_indices.push_back(y * m_r + x + 1);
-    }
-  }
+    for (int x = 0; x < m_c; x++) {
+      m_indices_fill.push_back(y * (m_c+1) + x);
+      m_indices_fill.push_back(y * (m_c+1) + x + 1);
+      m_indices_fill.push_back((y + 1) * (m_c+1)+ x + 1);
 
-  for (int x = 0; x < m_c; x++) {
-    for (int y = 0; y < m_r-1; y++) {
-      m_indices.push_back(y * m_c + x);
-      m_indices.push_back((y+1) * m_c + x);
-    }
-  }
-
-  for (int y = 0; y < m_r-1; y++) {
-    for (int x = 0; x < m_c-1; x++) {
-      m_indices_fill.push_back(y * m_c + x);
-      m_indices_fill.push_back(y * m_c + x + 1);
-      m_indices_fill.push_back((y + 1) * m_c+ x + 1);
-
-      m_indices_fill.push_back(y * m_c + x);
-      m_indices_fill.push_back((y + 1) * m_c + x + 1);
-      m_indices_fill.push_back((y + 1) * m_c + x);
+      m_indices_fill.push_back(y * (m_c+1) + x);
+      m_indices_fill.push_back((y + 1) * (m_c+1) + x + 1);
+      m_indices_fill.push_back((y + 1) * (m_c+1) + x);
     }
   }
 

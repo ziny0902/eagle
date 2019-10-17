@@ -25,6 +25,34 @@ void MathHelper::v_2_u<3>(const double *s, double *t)
   t[2] = s[2]/length;
 }
 
+template<size_t d>
+double gsl_v_func_wraper(double x, void *param);
+
+double gsl_v_func_wraper(double x, void *param, int idx)
+{
+  v_function_param *p = (v_function_param *)param;
+  double prev_x = p->val[p->idx];
+  p->val[p->idx] = x;
+  double ret = p->f(p->val, idx);
+  p->val[p->idx] = prev_x;
+  return ret;
+}
+template<>
+double gsl_v_func_wraper<0>(double x, void *param)
+{
+  return gsl_v_func_wraper(x, param, 0);
+}
+template<>
+double gsl_v_func_wraper<1>(double x, void *param)
+{
+  return gsl_v_func_wraper(x, param, 1);
+}
+template<>
+double gsl_v_func_wraper<2>(double x, void *param)
+{
+  return gsl_v_func_wraper(x, param, 2);
+}
+
 static double gsl_func_wraper(double x, void *param)
 {
   function_param *p = (function_param *)param;
@@ -43,6 +71,29 @@ static double gsl_parametric_func_wraper(double x, void *param)
 }
 
 namespace MathHelper{
+template <typename F, size_t d>
+struct partial_derivative_parametric
+{
+  partial_derivative_parametric(F f, size_t i) : f(f), index(i) {}
+
+
+  double operator()(double* x)
+  {
+    gsl_function Fun;
+    v_function_param param = {f, index, x};
+    Fun.function = gsl_v_func_wraper<d>;
+    Fun.params = (void *)&param; 
+    double result;
+    double abserr;
+    gsl_deriv_central(&Fun, x[index], 1e-8, &result, &abserr);
+    return result;
+  }
+
+ private:
+  F f;
+  size_t index;
+ };
+
 template <typename F>
 struct partial_derivative
 {
@@ -95,12 +146,39 @@ partial_derivative<F> partial(F f, size_t i)
   return partial_derivative<F>(f, i);
 }
 
+template <typename F, size_t d>
+partial_derivative_parametric<F, d> partial(F f, size_t i)
+{
+  return partial_derivative_parametric<F, d>(f, i);
+}
+
 template <typename F>
 derivative_parametric<F> parametric_prime(F f, size_t i)
 {
   return derivative_parametric<F>(f, i);
 }
 
+}
+
+double MathHelper::partial(cal_func f, double *v, int idx)
+{
+  return partial(f, idx)(v);
+}
+
+template<>
+double MathHelper::partial<0>(cal_v_func f, double *v, int idx)
+{
+  return partial<cal_v_func, 0>(f, idx)(v);
+}
+template<>
+double MathHelper::partial<1>(cal_v_func f, double *v, int idx)
+{
+  return partial<cal_v_func, 1>(f, idx)(v);
+}
+template<>
+double MathHelper::partial<2>(cal_v_func f, double *v, int idx)
+{
+  return partial<cal_v_func, 2>(f, idx)(v);
 }
 
 std::vector<double> MathHelper::gradiant(cal_func f, double *v, const size_t dimention)

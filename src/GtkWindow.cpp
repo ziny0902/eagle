@@ -520,7 +520,9 @@ bool GtkAppWindow::on_key_event(GdkEventKey* key_event)
      Glib::RefPtr<Gdk::Cursor> cursor 
     = Gdk::Cursor::create(
         m_gl_area.get_display()
-      , Gdk::CursorType::CROSSHAIR 
+        // , "move"
+        , Gdk::CursorType::HAND1
+      // , Gdk::CursorType::CROSSHAIR 
     );
     m_gl_area.get_window()->set_cursor(cursor);
 
@@ -579,14 +581,14 @@ bool GtkAppWindow::on_glarea_scroll(GdkEventScroll * e)
 {
   if (e->direction == GDK_SCROLL_UP)
   {
-    m_adjustment_lookat_z->set_value(
-      m_adjustment_lookat_z->get_value() + 0.5 
+    m_adjustment_translate_z->set_value(
+      m_adjustment_translate_z->get_value() - 0.5 
     );
   }
   else if (e->direction == GDK_SCROLL_DOWN)
   {
-    m_adjustment_lookat_z->set_value(
-      m_adjustment_lookat_z->get_value() - 0.5 
+    m_adjustment_translate_z->set_value(
+      m_adjustment_translate_z->get_value() + 0.5 
     );
   }
 

@@ -30,6 +30,14 @@ extern "C" glm::vec3 parametric_surface(float u, float v)
   return glm::vec3(x, y, z);
 }
 
+extern "C" glm::vec3 sphere_func(float u, float v)
+{
+  float x = (3*cos(v))*cos(u);
+  float y = (3*cos(v))*sin(u);
+  float z = 3*sin(v);
+  return glm::vec3(x, y, z);
+}
+
 extern "C" glm::dvec3 plot_3df(double t)
 {
   double x = (4+ std::cos(20*t))*std::cos(t);
