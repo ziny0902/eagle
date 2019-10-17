@@ -9,15 +9,22 @@
 
 namespace Gl
 {
+enum WidgetAliangment {
+  WIDGET_ALIGNMENT_TOP_RIGHT
+  , WIDGET_ALIGNMENT_TOP_LEFT
+};
 
 class GlWidgetManager : public GlDrawableWidget{
 public:
   GlWidgetManager(IniManager& ini);
   GlWidgetManager(ResourceManager& res, IniManager& ini);
   ~GlWidgetManager(){}
+  virtual void move(const int x, const int y);
+
   std::shared_ptr<Gl::Shader> get_shader();
   void add(GlWidget &);
   void set_window_size(int w, int h);
+  void set_window_alignment(WidgetAliangment align);
   // void on_mouse_button();
   void update();
   void resource_release(int id);

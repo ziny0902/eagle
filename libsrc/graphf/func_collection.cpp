@@ -40,6 +40,7 @@ extern "C" glm::vec3 sphere_func(float u, float v)
 
 extern "C" glm::dvec3 plot_3df(double t)
 {
+  t = t/10;
   double x = (4+ std::cos(20*t))*std::cos(t);
   double y = (4+ std::cos(20*t))*std::sin(t);
   double z = sin(20*t); 
@@ -48,12 +49,16 @@ extern "C" glm::dvec3 plot_3df(double t)
 
 extern "C" glm::dvec3 projectilef(double t)
 {
-  static quantity<si::velocity> v_0 = 38 * meter_per_second;
+  static quantity<si::velocity> v_0 = 3.8 * meter_per_second;
   static quantity<plane_angle> alpha = (M_PI/2.2)*radians;
   quantity<si::time> _t = t * second;
   quantity<si::length> x =(v_0 * std::cos(alpha.value())) * _t;
-  quantity<si::length> y = (v_0 * std::sin(alpha.value())) * _t - 0.5*G * _t * _t;
-  return glm::dvec3(x.value()/10.0, y.value()/10.0, 0);
+  quantity<si::length> y = (v_0 * std::sin(alpha.value())) * _t - 0.5*G * _t * _t * 0.1;
+  if(y.value() < 0) {
+    v_0 = 0 * meter_per_second;
+    return glm::dvec3(x.value(), 0, 0);
+  }
+  return glm::dvec3(x.value(), y.value(), 0);
 }
 
 extern "C" glm::vec3 hookes_law(float t)

@@ -19,10 +19,12 @@ public:
     Gl::GlCharacterTable &_ch_font
   );
   ~GlDrawableWidget(){}
+  virtual void resize(const int w, const int h);
+  virtual void update();
+  virtual void move(int x, int y);
+
   std::shared_ptr<Gl::Shader> get_shader();
   // void on_mouse_button();
-  void resize(const int w, const int h);
-  void update();
   void hide() { m_is_hide = true; }
   void show() { m_is_hide = false; }
 

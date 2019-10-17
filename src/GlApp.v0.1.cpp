@@ -280,6 +280,7 @@ void GlApp3D::set_window_size(int w, int h)
   m_w = w;
   m_h = h;
   m_gl_window.set_window_size(w, h);
+  m_gl_window.set_window_alignment(Gl::WIDGET_ALIGNMENT_TOP_RIGHT);
 }
 
 static unsigned long getTick(steady_clock::time_point t_p)
@@ -417,7 +418,7 @@ std::cout <<  "  depth: " << z
 #ifdef __DEBUG__
   std::cout << msg << std::endl;
 #endif
-  m_gl_window.update_coord_info(x, y, msg);
+  m_gl_window.update_coord_info(msg);
 }
 
 void GlApp3D::post_pixel_sel(
@@ -470,7 +471,9 @@ void GlApp3D::post_pixel_sel(
         = boost::format("vector3d\n"
        "(%s, %s, %s)\n(%s, %s, %s)\n") 
         % sp.x % sp.y % sp.z % ep.x % ep.y % ep.z;
+#ifdef __DEBUG__
       std::cout << fmt.str();
+#endif
       msg.append(fmt.str());
       return;
     }
@@ -491,7 +494,7 @@ void GlApp3D::post_pixel_sel(
 
 void GlApp3D::mouse_release(int x, int y)
 {
-  m_gl_window.mouse_release(x, y);
+  // m_gl_window.mouse_release(x, y);
 }
 
 void GlApp3D::add_vector(glm::vec3 s, glm::vec3 e)
@@ -519,8 +522,10 @@ void GlApp3D::add_TNB_frame(float t
   B = MathHelper::get_binormal_v(&T[0], &N[0]);
   p0 = m_plot3d.cal_func(t);
 
+#ifdef __DEBUG__
   std::cout << "selected vector : " << sel_vector << "\n";
   std::cout << "selected plane : " << sel_plane << "\n";
+#endif
 
   if(sel_vector & 0x01)
     m_vector3d.add_vector(

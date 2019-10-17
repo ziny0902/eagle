@@ -67,7 +67,6 @@ void Plot3D::activate_sampler(steady_clock::time_point &t_c, Gl::ResourceManager
   milliseconds t_d = duration_cast<milliseconds> (t_c - m_t0);
   float t = ((float)(t_d.count())/1000);
   glm::dvec3 f_t= m_func_ptr(t);
-  if(f_t.y <= 0) deactivate_realtime();
 
   int offset = m_data.size();
   m_data.push_back((float)f_t.x);

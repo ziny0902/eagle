@@ -23,6 +23,11 @@ GlDrawableWidget::GlDrawableWidget(
   is_hidden_window = false;
 
 }
+
+void GlDrawableWidget::move(int x, int y)
+{
+  GlWidget::move(x, y);
+}
 void GlDrawableWidget::resize(const int w, const int h)
 {
   GlWidget::resize(w, h); 

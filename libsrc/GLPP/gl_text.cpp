@@ -166,12 +166,7 @@ GlTextObject::GlTextObject(
   init_gl_buffer();
 }
 
-void GlTextObject::update_string
-(
-  int x,
-  int y,
-  std::string &&s
-)
+void GlTextObject::update_string (std::string &&s)
 {
   m_text = s;
   init_vertex_data();
@@ -179,17 +174,27 @@ void GlTextObject::update_string
   int buffer_size = m_points.size()*sizeof(float);
 
   m_res.replace_gl_vbo_data(
-    gl_resource_id,
-    (unsigned char *)&m_points[0],
-    buffer_size,
-    m_points.size()/4
-  );
+      gl_resource_id,
+      (unsigned char *)&m_points[0],
+      buffer_size,
+      m_points.size()/4
+                            );
   GlDrawableWidget::resize(
-    m_tw + 2*m_margin, 
-    m_th + 2*m_margin
-  );
-  set_pos(x, y);
+      (m_tw + 2*m_margin) > m_width ? (m_tw + 2*m_margin) : m_width
+      ,
+      (m_th + 2*m_margin) > m_height? (m_th + 2*m_margin) : m_height
+                           );
+}
 
+void GlTextObject::update_string
+(
+  int x,
+  int y,
+  std::string &&s
+)
+{
+  update_string(std::move(s));
+  set_pos(x, y);
 }
 
 int GlTextObject::get_width()
@@ -202,13 +207,19 @@ int GlTextObject::get_height()
   return m_th;
 }
 
+void GlTextObject::move(int x, int y)
+{
+  // GlWidget::move(x, y);
+  set_pos(x, y);
+}
+
 void GlTextObject::set_pos(int x, int y)
 {
   int l_height = m_ch_font.get_lineheight();
-  m_tx = x;
-  m_x = x - m_margin;
-  m_ty = m_wh - y - l_height*m_scale;
-  m_y = m_wh - y - m_th - m_margin;
+  m_tx = x + m_margin;
+  m_x = x;
+  m_ty = m_wh - y - l_height*m_scale - m_margin;
+  m_y = m_wh - y - m_height; //+ m_th + m_margin;
   if(m_shader >= 0) {
     glm::mat4 projection = glm::ortho(
       0.0f, static_cast<GLfloat>(m_ww), 
@@ -302,8 +313,9 @@ void GlTextObject::init_gl_buffer()
 
   init_vertex_data();
   GlDrawableWidget::resize(
-    m_tw + 2*m_margin, 
-    m_th + 2*m_margin
+      (m_tw + 2*m_margin) > m_width ? (m_tw + 2*m_margin) : m_width
+      ,
+      (m_th + 2*m_margin) > m_height? (m_th + 2*m_margin) : m_height
   );
 
   int buffer_size = m_points.size();

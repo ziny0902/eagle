@@ -10,7 +10,7 @@ using namespace Gl;
 GlWidget::GlWidget() :
 
    m_fg(1.0, 1.0, 1.0, 1.0)
-  ,m_bg(0.23, 0.48, 0.34, 0.85)
+  ,m_bg(0.23, 0.48, 0.34, 0.0)
 {
   m_fg = glm::vec4(1);
   m_x = 0;

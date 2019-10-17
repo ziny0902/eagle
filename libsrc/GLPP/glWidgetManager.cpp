@@ -26,6 +26,36 @@ GlWidgetManager::GlWidgetManager(
   is_hidden_window = true;
 }
 
+void GlWidgetManager::move(const int x, const int y)
+{
+  GlWidget::move(x, y);
+  for( GlWidget& widget : m_widgets)
+  {
+    int _x, _y;
+    widget.get_position(_x, _y);
+    widget.move(x+_x, y - _y);
+  }
+}
+
+void GlWidgetManager::set_window_alignment(WidgetAliangment align)
+{
+  int offset = 0;
+  int w, h;
+
+  if(align == WIDGET_ALIGNMENT_TOP_RIGHT)
+  {
+    for( GlWidget& widget : m_widgets)
+    {
+      widget.get_size(w, h);
+#ifdef __DEBUG__
+      std::cout << "w : " << w << " h : " << h << std::endl;
+      std::cout << "ww : " << m_ww << " wh : " << m_wh << std::endl;
+#endif
+      widget.move(m_ww - w, m_wh - (m_wh - offset));
+      offset += h;
+    }
+  }
+}
 
 void GlWidgetManager::set_window_size(int w, int h)
 {

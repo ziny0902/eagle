@@ -25,9 +25,9 @@ public:
   virtual void on_drag(const int x, const int y);
   virtual void on_mouse_button();
   virtual void resource_release(int) {}
+  virtual void move(const int x, const int y);
+  virtual void resize(const int w, const int h);
 
-  void move(const int x, const int y);
-  void resize(const int w, const int h);
   glm::vec4 get_widget_fg();
   glm::vec4 get_widget_bg();
   void get_position(int& x, int& y);

@@ -16,15 +16,14 @@ void Highlight::Update(steady_clock::time_point &t_c, Gl::ResourceManager& manag
   if (m_selected_oid == std::numeric_limits<unsigned int>::max())
     return;
 
-  glm::mat4 scale = glm::scale(glm::mat4(1), glm::vec3(1.03, 1.03, 1));
+  static glm::mat4 Identity = glm::mat4(1.0f);
 
   std::shared_ptr<Gl::Shader> shader_ptr =
-      // is_delegated ?
-      // manager.get_shader_from_element_id(m_selected_oid) :
        manager.get_shader_from_element_id(gl_resource_id);
-
   shader_ptr->Bind();
-  // shader_ptr->SetUniformMatrix4fv("scale", scale);
+
+  shader_ptr->SetUniformMatrix4fv("trans", Identity);
+
   shader_ptr->SetUniform4f(
       "u_Color",
       m_color.x,

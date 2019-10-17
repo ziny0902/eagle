@@ -19,13 +19,16 @@ public:
     IniManager& ini,
     Gl::GlCharacterTable &_ch_font
   );
+  virtual void update();
+  virtual void move(int x, int y);
+
+  void update_string (std::string &&s);
   void update_string
   (
     int x,
     int y,
     std::string &&s
   );
-  void update();
   int get_width();
   int get_height();
   void set_pos(int x, int y);

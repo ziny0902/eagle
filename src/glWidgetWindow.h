@@ -6,6 +6,9 @@
 class glWidgetWindow : public Gl::GlWidgetManager{
 public:
   glWidgetWindow(IniManager& ini);
+  virtual void move(const int x, const int y);
+
+  void update_coord_info( std::string& s);
   void update_coord_info(int x, int y, std::string& s);
   void mouse_release(int x, int y);
 
