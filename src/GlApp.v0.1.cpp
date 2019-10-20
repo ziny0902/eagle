@@ -10,6 +10,7 @@
 #include <GLPP/util.h>
 #include <Math/multivcalculus.h>
 #include "GlApp.v0.1.h"
+#include "define_common.h"
 
 #define NUM_OF_COORDI   3
 #define TICK_SPACING    0.5 
@@ -37,7 +38,7 @@ GlApp3D::GlApp3D(IniManager& ini) :
   , m_view(1)
   , m_model(glm::mat4(1))
 {
-  is_object_selected = false;
+  m_obj_enabled = 0x0000;
   m_w = 600;
   m_h = 600;
 
@@ -70,6 +71,12 @@ GlApp3D::GlApp3D(IniManager& ini) :
 
 GlApp3D::~GlApp3D()
 {
+}
+
+static unsigned short set_enabled(unsigned short mask, bool enabled)
+{
+  if(enabled) return mask;
+  return 0;
 }
 
 #include <dlfcn.h>
@@ -107,16 +114,20 @@ void GlApp3D::StartUp(IniManager &ini)
 		plot3d_range = nullptr;
 	}
 
-	m_mesh_enabled = ini.get_boolean("GlApp", "mesh_enabled");
-	m_plot3d_enabled = ini.get_boolean("GlApp", "plot3d_enabled");
-	m_figure_enabled = ini.get_boolean("GlApp", "figure_enabled");
-	m_vector_enabled = ini.get_boolean("GlApp", "vector_enabled");
+	bool mesh_enabled = ini.get_boolean("GlApp", "mesh_enabled");
+	bool plot3d_enabled = ini.get_boolean("GlApp", "plot3d_enabled");
+	bool figure_enabled = ini.get_boolean("GlApp", "figure_enabled");
+	bool vector_enabled = ini.get_boolean("GlApp", "vector_enabled");
+  m_obj_enabled |= set_enabled(app_common::MESH_ENABLED, mesh_enabled);
+  m_obj_enabled |= set_enabled(app_common::PLOT3D_ENABLED, plot3d_enabled);
+  m_obj_enabled |= set_enabled(app_common::FIGURE_ENABLED, figure_enabled);
+  m_obj_enabled |= set_enabled(app_common::VECTOR_ENABLED, vector_enabled);
+
 // end initialization
 
   plot_func plot3d_fn = nullptr;
-	// glm::dvec3 (*plot3d_fn)(double) = nullptr;
 	glm::vec3 (*figure_fn)(float) = nullptr;
-  glm::vec3 (*mesh_fn)(float, float) = nullptr;
+  glm::dvec3 (*mesh_fn)(double, double) = nullptr;
 
 // load dynamic function.
 {
@@ -136,7 +147,7 @@ void GlApp3D::StartUp(IniManager &ini)
 	if(figure_fn_str != nullptr)
 		figure_fn =  (glm::vec3(*)(float))dlsym(lib_handle, figure_fn_str->c_str());
 	if(mesh_fn_str != nullptr)
-		mesh_fn =  (glm::vec3(*)(float, float))dlsym(lib_handle, mesh_fn_str->c_str());
+		mesh_fn =  (glm::dvec3(*)(double, double))dlsym(lib_handle, mesh_fn_str->c_str());
 
 	char *error;
 	if ((error = dlerror()) != NULL)  
@@ -147,7 +158,7 @@ void GlApp3D::StartUp(IniManager &ini)
 	dlclose(lib_handle);
 }
 
-	if(m_mesh_enabled && mesh_fn != nullptr){
+if((m_obj_enabled & app_common::MESH_ENABLED) && mesh_fn != nullptr){
 		if(mesh_range != nullptr){
 			m_mesh.regfunc(
 				{(float)(*mesh_range)[0], (float)(*mesh_range)[1]}, 
@@ -158,10 +169,12 @@ void GlApp3D::StartUp(IniManager &ini)
 		m_mesh.init_gl_buffer(m_manager, layout, m_mesh_shader);
 	}
 	else {
-		m_mesh_enabled = false;
+    m_obj_enabled &= ~app_common::MESH_ENABLED;
 	}
 
-	if(m_plot3d_enabled && plot3d_fn != nullptr && plot3d_range != nullptr) {
+	if( (m_obj_enabled & app_common::PLOT3D_ENABLED)
+     && plot3d_fn != nullptr
+     && plot3d_range != nullptr) {
     bool real_time = ini.get_boolean("GlApp", "real_time_enabled");
 		m_plot3d.regfunc(plot3d_fn);
     if(real_time){
@@ -176,20 +189,21 @@ void GlApp3D::StartUp(IniManager &ini)
 		m_plot3d.init_gl_buffer(m_manager, layout, m_shader);
 	}
 	else{
-		m_plot3d_enabled = false;
+    m_obj_enabled &= ~app_common::PLOT3D_ENABLED;
 	}
 
-	if(m_vector_enabled) {
+	if(m_obj_enabled & app_common::VECTOR_ENABLED) {
 		m_vector3d.init_gl_buffer(m_manager, layout, m_shader);
 	}
 
-	if(m_figure_enabled && figure_fn != nullptr) {
+	if((m_obj_enabled & app_common::FIGURE_ENABLED)
+     && figure_fn != nullptr) {
 		m_figure.init_gl_buffer(m_manager, layout, m_shader);
 		m_figure.regfunc(figure_fn);
 		m_figure.action_start();
 	}
 	else {
-		m_figure_enabled = false;
+    m_obj_enabled &= ~app_common::FIGURE_ENABLED;
 	}
 
   m_plane3d.init_gl_buffer(m_manager);
@@ -315,29 +329,26 @@ void GlApp3D::Draw()
 
   shader_ptr->SetUniform4f("u_Color", 0.0f, 0.5f, 1.0f, 1.0f); 
 
-  if(m_plot3d_enabled) {
+  if(m_obj_enabled & app_common::PLOT3D_ENABLED) {
     m_plot3d.Update(t_p, m_manager);
   }
 
-  if(m_vector_enabled){
+  if(m_obj_enabled & app_common::VECTOR_ENABLED){
     m_vector3d.Update(t_p, m_manager);
   }
 
-  if(m_figure_enabled) {
+  if(m_obj_enabled & app_common::FIGURE_ENABLED) {
     m_figure.move(t_p, m_manager, "trans");
     m_figure.Update(t_p, m_manager);
   }
 
   shader_ptr->UnBind();
 
-  if(m_mesh_enabled){
+  if(m_obj_enabled & app_common::MESH_ENABLED){
     m_mesh.Update(t_p, m_manager);
   }
 
-  if(is_object_selected)
-    m_highlight.Update(t_p, m_manager);
-  else
-    m_highlight.clear();
+  m_highlight.Update(t_p, m_manager);
 
   m_plane3d.Update(t_p, m_manager);
 
@@ -358,9 +369,6 @@ void GlApp3D::display_pixel_info(int x, int y)
   float nx = (float)((x - width)/width);
   float ny = (float)((height - y)/height);
   float z = 0;
-
-  is_object_selected = false;
-  m_vector3d.highlight(-1);
 
 #ifdef __DEBUG__
   std::cout << "screen --> x: " << x << "; y: " << y <<std::endl;
@@ -398,12 +406,14 @@ void GlApp3D::display_pixel_info(int x, int y)
       break;
     }
   }
-  if(z == 1) return ;
+  if(z == 1){
+    m_highlight.clear();
+    return ;
+  }
   if(depths[5] != 1) {
     z = depths[5];
     id = index[5];
   }
-  
 #ifdef __DEBUG__
 std::cout <<  "  depth: " << z 
 << " id: " << id
@@ -430,61 +440,47 @@ void GlApp3D::post_pixel_sel(
 )
 {
   if(m_highlight.is_match(id)){
-    is_object_selected = true;
     // id = m_highlight.get_oid();
   }
+  else
+    m_highlight.clear();
 
   if (m_plot3d.is_match(id)) {
-    msg.append("plot3d\n");
-    is_object_selected = true;
-    m_highlight.set_highlight(
-        m_manager
-        , NULL
-        , 0
-        , id
-        , id
-                              );
+    m_plot3d.set_highlight(m_manager
+                           , m_highlight
+                           , glm::vec3(x, y, z)
+                           , msg);
   }
   if (m_mesh.is_match(id)) {
-    msg.append("mesh\n");
-    m_mesh.set_highlight(m_manager, m_highlight);
-    is_object_selected = true;
+    m_mesh.set_highlight(m_manager
+                         , m_highlight
+                         , glm::vec3(x, y, z)
+                         , msg);
+    float u, v;
+    m_mesh.find_uv_parameter(glm::vec3(x, y, z), u, v);
+    glm::vec3 ret = m_mesh.cal_func(u, v);
+    glm::dvec3 gradiant = MathHelper::unit_normal(m_mesh.cal_func, u, v);
+    m_vector3d.add_vector(m_manager
+                          , {ret.x , ret.y , ret.z}
+                          , { ret.x + (float)gradiant.x
+                              , ret.y + (float)gradiant.y
+                              , ret.z + (float)gradiant.z}
+                          );
+
   }
   if (m_vector3d.is_match(id)) {
-    is_object_selected = true;
-    int offset = m_vector3d.find_vector(x, y, z);
-    std::shared_ptr<std::vector<float>> v
-        = m_vector3d.get_vector(offset);
-    m_highlight.set_highlight(
-        m_manager
-        , (unsigned char *)&(*v)[0]
-        , v->size()*sizeof(float)
-        , id
-        , offset
-                              );
-    v = nullptr;
-    m_vector3d.highlight(offset);
-    glm::vec3 sp, ep;
-    bool ret = m_vector3d.get_vector_info(offset, sp, ep);
-    if(ret){
-      boost::format fmt
-        = boost::format("vector3d\n"
-       "(%s, %s, %s)\n(%s, %s, %s)\n") 
-        % sp.x % sp.y % sp.z % ep.x % ep.y % ep.z;
-#ifdef __DEBUG__
-      std::cout << fmt.str();
-#endif
-      msg.append(fmt.str());
-      return;
-    }
+    m_vector3d.set_highlight(m_manager
+                             , m_highlight
+                             , glm::vec3(x, y, z)
+                             , msg);
+    return;
   }
   if (m_plane3d.is_match(id)) {
     glm::vec3 coord(x,y,z);
-    bool ret = m_plane3d.set_selected_plane(
+    m_plane3d.set_selected_plane(
         m_manager,
         m_highlight,
         coord);
-    if(ret){ is_object_selected = true; }
   }
 
   boost::format fmt
@@ -584,9 +580,12 @@ void GlApp3D::add_plane(
 
 void GlApp3D::del_select_object()
 {
-  is_object_selected = false;
+  m_vector3d.delete_highlight_vector(m_manager
+                                     , m_highlight.get_selected_coord());
   m_highlight.clear();
-  m_vector3d.delete_highlight_vector(m_manager);
 }
 
-
+float GlApp3D::get_plot3d_selected_parameter()
+{
+  return m_plot3d.find_parameter(m_highlight.get_selected_coord());
+}

@@ -181,6 +181,50 @@ double MathHelper::partial<2>(cal_v_func f, double *v, int idx)
   return partial<cal_v_func, 2>(f, idx)(v);
 }
 
+glm::dvec3 MathHelper::unit_normal(
+    glm::dvec3 (*f)(double, double)
+    , double u
+    , double v
+                                         )
+{
+  double uv[2] = {u, v};
+  auto fn = fnptr<double(double*, int)>
+      ([f](double *t, double idx)
+       { glm::dvec3 ret = f(t[0], t[1]); return ret[idx]; }
+        );
+  double r_u[3], r_v[3];
+  r_u[0] = (partial<0>(fn, uv, 0));
+  r_u[1] = (partial<1>(fn, uv, 0));
+  r_u[2] = (partial<2>(fn, uv, 0));
+
+  r_v[0] = (partial<0>(fn, uv, 1));
+  r_v[1] = (partial<1>(fn, uv, 1));
+  r_v[2] = (partial<2>(fn, uv, 1));
+
+  double u_u[3], u_v[3];
+  v_2_u<3>(r_u, u_u);
+  v_2_u<3>(r_v, u_v);
+#ifdef __DEBUG__
+  std::cout << "gradient <" << r_u[0] << " , " << r_v[0] << ">\n";
+  std::cout << "gradient <" << r_u[1] << " , " << r_v[1] << ">\n";
+  std::cout << "gradient <" << r_u[2] << " , " << r_v[2] << ">\n";
+#endif
+
+  if(abs(u_u[0] - 1) < 1e-4 && abs(u_v[1] -1) < 1e-4)
+  {
+    return glm::cross(glm::dvec3(u_u[0], u_u[1], u_u[2])
+                      , glm::dvec3(u_v[0], u_v[1], u_v[2]));
+  }
+
+  if(r_u[2] > r_v[2])
+    return glm::cross(glm::dvec3(u_v[0], u_v[1], u_v[2])
+                      , glm::dvec3(u_u[0], u_u[1], u_u[2]));
+  else
+    return glm::cross(glm::dvec3(u_u[0], u_u[1], u_u[2])
+                      , glm::dvec3(u_v[0], u_v[1], u_v[2]));
+}
+
+
 std::vector<double> MathHelper::gradiant(cal_func f, double *v, const size_t dimention)
 {
   std::vector<double> grad_v;

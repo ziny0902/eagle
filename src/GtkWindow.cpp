@@ -137,6 +137,10 @@ void GtkAppWindow::on_del_object()
 void GtkAppWindow::on_add_TNB_frame()
 {
   Plot3dDig dig;
+
+  float t = m_gl_app->get_plot3d_selected_parameter();
+  dig.set_parameter(t);
+
   int ret = dig.run();
   if(ret == Gtk::RESPONSE_CANCEL) return; 
 
@@ -171,11 +175,11 @@ void GtkAppWindow::create_pop_menu()
   );
   m_menu_popup->append(*m_del_object_menu);
 
-  item= new Gtk::MenuItem("Add TNB frame");
-  item->signal_activate().connect(
+  m_add_TNB_menu = new Gtk::MenuItem("Add TNB frame");
+  m_add_TNB_menu->signal_activate().connect(
       sigc::mem_fun(this, &GtkAppWindow::on_add_TNB_frame)
                                                );
-  m_menu_popup->append(*item);
+  m_menu_popup->append(*m_add_TNB_menu);
 
   m_menu_popup->show_all();
 }
@@ -468,14 +472,25 @@ bool GtkAppWindow::on_glarea_render(const Glib::RefPtr<Gdk::GLContext>& ctx)
 
 void GtkAppWindow::proc_pop_menu(GdkEventButton* event)
 {
+  app_common::app_gl_object sel_obj_type
+      = m_gl_app->get_selected_obj_type();
   if(m_menu_popup == nullptr)
     create_pop_menu();
-  if(m_gl_app->is_selected()){
+  if(sel_obj_type == app_common::app_gl_object::vector3d){
     m_del_object_menu->set_sensitive(true);
   }
   else {
     m_del_object_menu->set_sensitive(false);
   }
+
+  unsigned short enabled = m_gl_app->get_enabled_object();
+  if(enabled & app_common::PLOT3D_ENABLED
+     && sel_obj_type == app_common::app_gl_object::plot3d
+     )
+    m_add_TNB_menu->set_sensitive(true);
+  else
+    m_add_TNB_menu->set_sensitive(false);
+
   m_menu_popup->popup(event->button, event->time);
   return;
 }

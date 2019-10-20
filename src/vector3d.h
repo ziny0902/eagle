@@ -7,6 +7,7 @@
 #include <GLPP/vertex_arrays.h>
 #include <GLPP/shader.h>
 #include <GLPP/gl_drawing_obj.h>
+#include "Highlight.h"
 
 using namespace std::chrono;
 
@@ -41,19 +42,22 @@ public:
   );
 
   int find_vector(float x, float y, float z);
-  void highlight(int offset);
   void delete_highlight_vector(
     Gl::ResourceManager &manager
+    , glm::vec3 coord
   );
   bool get_vector_info(int offset, glm::vec3& s, glm::vec3& e);
   void set_color(glm::vec4& color);
   void set_highligt_color(glm::vec4& color);
   std::shared_ptr<std::vector<float>> get_vector(int offset);
-
+  void set_highlight(Gl::ResourceManager& manager
+                     , Highlight& highlight
+                     , glm::vec3&& coord
+                     , std::string& msg
+                     );
 private:
   glm::vec4 m_color;
   glm::vec4 m_highlight_color;
-  int m_highlight_vector;
   float m_v_head_len;
   std::vector<float> m_data;
 };

@@ -37,19 +37,28 @@ public:
       , glm::vec4& color
                  );
   inline bool is_selected() {
-    return is_object_selected;
+    bool ret =
+    m_highlight.get_selected_obj_type() == app_common::app_gl_object::none
+        ? false : true;
+    return ret;
   }
+  app_common::app_gl_object get_selected_obj_type(){
+    return m_highlight.get_selected_obj_type();
+  }
+  unsigned short get_enabled_object()
+  { return m_obj_enabled; }
+
   void del_select_object();
   void add_TNB_frame(float t
                      , unsigned short sel_vector
                      , unsigned short sel_plane
                      , glm::vec4 plane_color
                      );
+  float get_plot3d_selected_parameter();
 
 private:
   int m_w, m_h;
-  bool m_mesh_enabled, m_plot3d_enabled, m_figure_enabled, m_vector_enabled;
-  bool is_object_selected;
+  unsigned short m_obj_enabled;
 
   unsigned int m_shader;
   unsigned int m_mesh_shader;

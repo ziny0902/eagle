@@ -1,4 +1,5 @@
 #include <iostream>
+#include <Math/multivcalculus.h>
 #include "mesh.h"
 
 Mesh::Mesh(int r, int c) 
@@ -15,12 +16,22 @@ void Mesh::regfunc(std::vector<float> x_range, std::vector<float> y_range, func_
   cal_func = func_ptr;
   float x_tick = (x_range[1] - x_range[0])/m_c;
   float y_tick = (y_range[1] - y_range[0])/m_r;
+
+  m_u_tick = x_tick;
+  m_v_tick = y_tick;
+  m_u_s = x_range[0];
+  m_v_s = y_range[0];
+
   for( int i = 0; i <= m_r; i++){
     for(int j = 0; j <= m_c; j++) {
       float u = x_range[0] + j*x_tick;
       float v = y_range[0] + i*y_tick;
-      glm::vec3 vertice = cal_func(u, v);
-      m_vertices.push_back(vertice);
+      glm::dvec3 vertice = cal_func(u, v);
+      m_vertices.push_back(
+          glm::vec3((float) vertice.x
+                    , (float) vertice.y
+                    , (float) vertice.z
+                    ));
     }
   }
   for (int y = 0; y <= m_r; y++) {
@@ -91,7 +102,7 @@ void Mesh::init_gl_buffer(
         shader_id,
         vertArray_id 
         );
-  m_vertices.clear();
+  // m_vertices.clear();
   m_indices.clear();
   m_indices_fill.clear();
 }
@@ -119,9 +130,73 @@ void Mesh::Update(steady_clock::time_point &t_c, Gl::ResourceManager& manager)
 }
 
 void Mesh::set_highlight(
-    Gl::ResourceManager& manager,
-    Highlight& highlight
+    Gl::ResourceManager& manager
+    , Highlight& highlight
+    , glm::vec3&& coord
+    , std::string& msg
                          )
 {
-  highlight.set_highlight(manager, NULL, 0, ibo_fill_resource_id, ibo_resource_id);
+  msg.append("mesh\n");
+  highlight.set_highlight(manager
+                          , NULL
+                          , 0
+                          , ibo_fill_resource_id
+                          , ibo_resource_id
+                          , app_common::app_gl_object::mesh
+                          );
+  highlight.set_selected_coord(manager, coord);
+}
+
+static double vertice_distance(glm::vec3& a, glm::vec3& b)
+{
+  double len =
+      (a.x - b.x)*(a.x - b.x)
+      + (a.y - b.y)*(a.y - b.y)
+      + (a.z - b.z)*(a.z - b.z);
+  return std::sqrt(len);
+}
+
+void Mesh::selected(
+    Gl::ResourceManager& manager
+    , Highlight& highlight
+    , glm::vec3 xyz
+    , float& u
+    , float& v
+)
+{
+  find_uv_parameter(glm::vec3(xyz.x, xyz.y, xyz.z), u, v);
+}
+
+void Mesh::find_uv_parameter(glm::vec3 xyz, float& u, float& v)
+{
+  int col =0, row = 0;
+  double near = std::numeric_limits<double>::max();
+  double distance = 0;
+  int near_c = 0, near_r = 0;
+
+  for(auto it = m_vertices.begin(); it != m_vertices.end() ; ++it)
+  {
+    distance = vertice_distance(xyz, *it);
+    if(near > distance){
+      near = distance;
+      near_c = col;
+      near_r = row;
+#ifdef __DEBUG__
+      std::cout << "( " << (*it).x
+                << ", " << (*it).y
+                << ", " << (*it).z << ")\n";
+#endif
+    }
+    col++;
+    if(col > m_c){
+      col = 0;
+      row++;
+    }
+  }
+  xyz = m_vertices[near_r * (m_c+1) + near_c];
+  std::cout << "( " << xyz.x
+            << " , " << xyz.y
+            << " , " << xyz.z << " )\n";
+  u = m_u_s + m_u_tick*near_c;
+  v = m_v_s + m_v_tick*near_r;
 }

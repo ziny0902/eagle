@@ -1,12 +1,12 @@
+#include <boost/format.hpp>
 #include <util/ini.h>
 #include "vector3d.h"
+#include "define_common.h"
 
 Vector3d::Vector3d(point_3d s, point_3d e)
     : m_color(1.0f, 1.0f, 1.0f, 1.0f)
 , m_highlight_color(1, 1, 0, 1)
 {
-  m_highlight_vector = -1;
-
   // initialize vector config from file(graph3d.ini) 
   IniManager ini("config/graph3d.ini");
   m_v_head_len = ini.get_double("GlApp", "vector_head_length");
@@ -61,11 +61,6 @@ bool Vector3d::get_vector_info(int offset, glm::vec3& s, glm::vec3& e)
   return true;
 }
 
-void Vector3d::highlight(int offset)
-{
-  m_highlight_vector = offset;
-}
-
 void Vector3d::add_vector(
 Gl::ResourceManager &manager,
 point_3d s, point_3d e
@@ -116,12 +111,14 @@ std::shared_ptr<std::vector<float>> Vector3d::get_vector(int offset)
 
 void Vector3d::delete_highlight_vector(
   Gl::ResourceManager &manager
+  , glm::vec3 coord
 )
 {
-  if( m_data.size() < m_highlight_vector+NUM_OF_ELEMENT_PER_VECTOR) return;
+  int offset = find_vector(coord.x, coord.y, coord.z);
+  if( m_data.size() < offset+NUM_OF_ELEMENT_PER_VECTOR) return;
   m_data.erase(
-    m_data.begin()+m_highlight_vector, 
-    m_data.begin()+m_highlight_vector+NUM_OF_ELEMENT_PER_VECTOR
+    m_data.begin() + offset,
+    m_data.begin() + offset + NUM_OF_ELEMENT_PER_VECTOR
   );
 
   //GL buffer update.
@@ -131,8 +128,6 @@ void Vector3d::delete_highlight_vector(
     bytes(),
     m_data.size()/3
   );
-  
-  m_highlight_vector = -1;
 }
 
 void Vector3d::init_gl_buffer(
@@ -173,3 +168,29 @@ void Vector3d::Update(steady_clock::time_point &t_c, Gl::ResourceManager& manage
 
 }
 
+void Vector3d::set_highlight(Gl::ResourceManager& manager
+                   , Highlight& highlight
+                   , glm::vec3&& coord
+                   , std::string& msg
+                   )
+{
+  int offset = find_vector(coord.x, coord.y, coord.z);
+  std::shared_ptr<std::vector<float>> v
+      = get_vector(offset);
+  highlight.set_highlight(
+      manager
+      , (unsigned char *)&(*v)[0]
+      , v->size()*sizeof(float)
+      , gl_resource_id
+      , offset
+      , app_common::app_gl_object::vector3d
+                            );
+  highlight.set_selected_coord(manager, coord);
+  glm::vec3 sp, ep;
+  get_vector_info(offset, sp, ep);
+  boost::format fmt
+      = boost::format("vector3d\n"
+                      "(%s, %s, %s)\n(%s, %s, %s)\n") 
+      % sp.x % sp.y % sp.z % ep.x % ep.y % ep.z;
+  msg.append(fmt.str());
+}

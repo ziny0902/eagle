@@ -46,6 +46,12 @@ double partial<1>(cal_v_func f, double *v, int idx);
 template<>
 double partial<2>(cal_v_func f, double *v, int idx);
 
+glm::dvec3 unit_normal(
+    glm::dvec3 (*f)(double, double)
+    , double u
+    , double v
+                                );
+
 std::vector<double> gradiant(MathHelper::cal_func f, double *v, const size_t dimention);
 
 double directional_derivative(MathHelper::cal_func f, double *v, const double *u, const size_t dimention);

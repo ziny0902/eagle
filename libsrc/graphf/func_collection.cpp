@@ -16,26 +16,26 @@ using namespace boost::units;
 using namespace boost::units::si;
 const static quantity<acceleration>    G(9.8 * meter_per_second / si::seconds); // and a distance,
 
-extern "C" glm::vec3 mesh_graphf(float x, float y)
+extern "C" glm::dvec3 mesh_graphf(double x, double y)
 {
-  float z = std::sin(fabs(x)+fabs(y));
-  return glm::vec3(x, y, z);
+  double z = std::sin(fabs(x)+fabs(y));
+  return glm::dvec3(x, y, z);
 }
 
-extern "C" glm::vec3 parametric_surface(float u, float v)
+extern "C" glm::dvec3 parametric_surface(double u, double v)
 {
-  float x = (2 + std::sin(v)) * std::cos(u);
-  float y = (2 + std::sin(v)) * std::sin(u);
-  float z = u + std::cos(v);
-  return glm::vec3(x, y, z);
+  double x = (2 + std::sin(v)) * std::cos(u);
+  double y = (2 + std::sin(v)) * std::sin(u);
+  double z = u + std::cos(v);
+  return glm::dvec3(x, y, z);
 }
 
-extern "C" glm::vec3 sphere_func(float u, float v)
+extern "C" glm::dvec3 sphere_func(double u, double v)
 {
-  float x = (3*cos(v))*cos(u);
-  float y = (3*cos(v))*sin(u);
-  float z = 3*sin(v);
-  return glm::vec3(x, y, z);
+  double x = (3*cos(v))*cos(u);
+  double y = (3*cos(v))*sin(u);
+  double z = 3*sin(v);
+  return glm::dvec3(x, y, z);
 }
 
 extern "C" glm::dvec3 plot_3df(double t)
@@ -96,7 +96,7 @@ std::cout << x << "(" << t << ")" << std::endl;
 #define FUEL_PER_SECOND 1451
 
 
-extern "C" glm::vec3 rocket_thrust(double t)
+extern "C" glm::dvec3 rocket_thrust(double t)
 {
 // rocket mass 
   static quantity<mass>  m =  (LEFTOFF_MASS * kilogram);
@@ -124,5 +124,5 @@ std::cout << "r : " << r << std::endl;
 std::cout << "m : " << m << std::endl;
 std::cout << "t : " << _t << std::endl;
 #endif
-  return glm::vec3(t/10, a.value(), 0);
+  return glm::dvec3(t/10, a.value(), 0);
 }

@@ -7,6 +7,7 @@
 #include <GLPP/vertex_arrays.h>
 #include <GLPP/shader.h>
 #include <GLPP/gl_drawing_obj.h>
+#include "Highlight.h"
 
 using namespace std::chrono;
 
@@ -35,6 +36,15 @@ public:
     Gl::VertexBufferLayout& layout,
     int shader_id
   );
+
+  void set_highlight(
+      Gl::ResourceManager& manager
+      , Highlight& highlight
+      , glm::vec3&& coord
+      , std::string& msg
+                     );
+
+  double find_parameter(glm::dvec3&& coord);
 
 private:
   std::vector<float> m_data;

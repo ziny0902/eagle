@@ -16,6 +16,13 @@ double f_xyz(double *v)
 {
   return 80/(1+ std::pow(v[0], 2) + 2*std::pow(v[1],2) + 3*std::pow(v[2], 2));
 }
+
+double f_ex_11_6_8(double *xyz)
+{
+  return std::pow(xyz[0], 2)/4 + std::pow(xyz[1], 2) + std::pow(xyz[2], 2)/9;
+}
+
+
 glm::dvec3 v_f_parametric(double t)
 {
   double x = std::cos(t);
@@ -83,6 +90,14 @@ double f_ex_11_4_7(double* xy, int idx)
   return -1;
 }
 
+glm::dvec3 f_ex_11_4_7(double u, double v)
+{
+  double x = u*u;
+  double y = v*v;
+  double z = u+2*v;
+  return glm::dvec3(x, y, z);
+}
+
 double f_ex_11_5_1(double* xy, int idx)
 {
   if(idx == 0)
@@ -96,6 +111,7 @@ double f_ex_11_5_1(double* xy, int idx)
   exit(-1);
   return -1;
 }
+
 
 
 using namespace MathHelper;
@@ -125,6 +141,14 @@ int main()
             << partial<1>(f_ex_11_4_7, xy, 1) <<" j + "
             << partial<2>(f_ex_11_4_7, xy, 1) <<" k "
             << std::endl;
+  {
+    glm::dvec3 norm = unit_normal(f_ex_11_4_7, 1, 1);
+    std::cout << "11.4 ex7)\n";
+    std::cout << "[" << norm.x
+              << " " << norm.y
+              << " " << norm.z
+              << "]" << std::endl;
+  }
 
   xy[0] =0;
   std::cout << "Dz: " << partial<2>(f_ex_11_5_1, xy, 0) << "\n";
@@ -141,6 +165,11 @@ int main()
 
   double v_xyz[] = {1, 1, -2};
   std::vector<double> grad = gradiant(f_xyz, v_xyz, 3);
+  std::cout << "[" << grad[0] << " " << grad[1] << " "  << grad[2] << "]" << std::endl;
+
+  double v_ex_11_6_8[] = {-2, 1, -3};
+  grad = gradiant(f_ex_11_6_8, v_ex_11_6_8, 3);
+  std::cout << "11.6 ex 8) \n";
   std::cout << "[" << grad[0] << " " << grad[1] << " "  << grad[2] << "]" << std::endl;
   // return 0;
 

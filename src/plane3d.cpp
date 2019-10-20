@@ -353,6 +353,7 @@ bool Plane3d::set_selected_plane(
       , v.size()*sizeof(float)
       , gl_resource_id
       , idx
+      , app_common::app_gl_object::plane3d
                           );
 
   return true;

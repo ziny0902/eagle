@@ -13,6 +13,7 @@ class Plot3dDig {
   Plot3dDig();
   ~Plot3dDig();
   int run();
+  void set_parameter(float p) {m_parameter = p;}
   float get_parameter() {return m_parameter;}
   unsigned short get_selected() {return m_flag;}
   unsigned short get_selected_plane() {return m_sel_plane; }

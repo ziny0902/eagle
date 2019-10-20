@@ -8,6 +8,7 @@ Plot3dDig::Plot3dDig()
   m_dialog = nullptr;
   m_flag = 0x00;
   m_sel_plane = 0x00;
+  m_parameter = 0.0;
 }
 
 Plot3dDig::~Plot3dDig()
@@ -28,13 +29,15 @@ int Plot3dDig::run()
   Cancel->signal_clicked().connect(
       sigc::mem_fun(*this, &Plot3dDig::on_cancel_clicked));
 
-  m_dialog->show_all();
-  int ret = m_dialog->run();
-
   Glib::RefPtr<Glib::Object> g_obj;
   g_obj = builder->get_object("adj_parameter");
   Glib::RefPtr<Gtk::Adjustment>adj_parameter
       = Glib::RefPtr<Gtk::Adjustment>::cast_static(g_obj);
+  adj_parameter->set_value(m_parameter);
+
+  m_dialog->show_all();
+  int ret = m_dialog->run();
+
   m_parameter = adj_parameter->get_value();
 
   Gtk::CheckButton *check;
