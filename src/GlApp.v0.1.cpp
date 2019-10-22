@@ -580,9 +580,21 @@ void GlApp3D::add_plane(
 
 void GlApp3D::del_select_object()
 {
-  m_vector3d.delete_highlight_vector(m_manager
-                                     , m_highlight.get_selected_coord());
-  m_highlight.clear();
+  app_common::app_gl_object type = m_highlight.get_selected_obj_type();
+  if(type == app_common::app_gl_object::vector3d)
+  {
+    m_vector3d.delete_highlight_vector(
+        m_manager
+        , m_highlight.get_selected_coord());
+    m_highlight.clear();
+  }
+  else if(type == app_common::app_gl_object::plane3d)
+  {
+    m_plane3d.delete_plane(
+        m_manager
+        , m_highlight.get_selected_coord());
+    m_highlight.clear();
+  }
 }
 
 float GlApp3D::get_plot3d_selected_parameter()

@@ -52,4 +52,9 @@ private:
   steady_clock::time_point m_t0;
   bool is_realtime;
 
+  double bsearch(glm::dvec3& target
+                         , double& t1
+                         , double& t0
+                 );
+
 };

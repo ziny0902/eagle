@@ -476,7 +476,8 @@ void GtkAppWindow::proc_pop_menu(GdkEventButton* event)
       = m_gl_app->get_selected_obj_type();
   if(m_menu_popup == nullptr)
     create_pop_menu();
-  if(sel_obj_type == app_common::app_gl_object::vector3d){
+  if(sel_obj_type == app_common::app_gl_object::vector3d
+     || sel_obj_type == app_common::app_gl_object::plane3d){
     m_del_object_menu->set_sensitive(true);
   }
   else {

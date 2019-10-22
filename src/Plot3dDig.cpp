@@ -64,7 +64,8 @@ int Plot3dDig::run()
   Gdk::RGBA color = color_button->get_rgba();
   m_color = glm::vec4(
       color.get_red()
-      , color.get_green()
+      , color.get_green(
+)
       , color.get_blue()
       , color.get_alpha()
                       );

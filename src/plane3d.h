@@ -48,6 +48,9 @@ class Plane3d : public Gl::Drawable_obj{
       , Highlight& highlight
       , glm::vec3& coord
                                    );
+  void delete_plane(
+      Gl::ResourceManager& manager
+      , glm::vec3 coord);
 
  private:
   // OpenGL Resource.
@@ -58,7 +61,6 @@ class Plane3d : public Gl::Drawable_obj{
 
   std::vector<float> m_dynamic;
   std::vector<float> m_fixed;
-  //std::vector<float> m_dynamic;
   std::vector<float> m_tex;
   void caculate_norm_angle(glm::vec3& n, double& theta, double& phi);
   void init_fixed_data();

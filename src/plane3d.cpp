@@ -3,6 +3,8 @@
 #include <Geo/geometry_common.h>
 #include "plane3d.h"
 
+#define NUM_OF_VERTEX_INFO_PER_PLANE 4*4
+
 #define ADD_VEC_4(v, x, y, z, a)                  \
   v.push_back(x);                               \
   v.push_back(y);                               \
@@ -86,7 +88,7 @@ void Plane3d::add_dynamic_data(
   }
 
   // vertex buffer data
-  tex_offset = tex_offset/(4*4);
+  tex_offset = tex_offset/(NUM_OF_VERTEX_INFO_PER_PLANE);
   ADD_VEC_2(m_dynamic, 0, tex_offset);
   ADD_VEC_2(m_dynamic, 1, tex_offset);
   ADD_VEC_2(m_dynamic, 3, tex_offset);
@@ -250,7 +252,7 @@ Plane3d::get_plane_by_index(int idx)
     , {-1, -1, 0, 1}
   };
   // plane3dv.glsl; struct plane_info
-  idx = idx * 4 * 4 + 4;
+  idx = idx * NUM_OF_VERTEX_INFO_PER_PLANE + 4;
 
   float *ptr = &m_tex[idx];
   glm::vec4 v_scale (ptr[0], ptr[1], ptr[2], ptr[3]);
@@ -277,7 +279,9 @@ Plane3d::get_plane_by_index(int idx)
   for(int i=0; i < 5; i++)
   {
     points[i] = transform * points[i];
+#ifdef __DEBUG__
     std::cout << glm::to_string(points[i]) << "\n";
+#endif
     plane->append({points[i].x, points[i].y, points[i].z});
   }
 
@@ -287,17 +291,18 @@ Plane3d::get_plane_by_index(int idx)
 int Plane3d::find_plane(float x, float y, float z)
 {
   double c_distance = std::numeric_limits<int>::max();
-  int num_of_plane = m_tex.size()/(4*4);
+  int num_of_plane = m_tex.size()/(NUM_OF_VERTEX_INFO_PER_PLANE);
   int idx = -1;
   std::shared_ptr<geo::GeoModel3D> select = nullptr;
-  std::cout << "num_of_plane "  << num_of_plane << std::endl;
 
   for(int i = 0; i < num_of_plane; i++)
   {
     std::shared_ptr<geo::GeoModel3D> plane
         = get_plane_by_index(i);
     double distance = plane->distance(geo::GEO_POLYGON, {x, y, z});
+#ifdef __DEBUG__
     std::cout << "distance: " << distance << std::endl;
+#endif
     if(distance < c_distance) {
       idx = i;
       c_distance = distance;
@@ -306,6 +311,40 @@ int Plane3d::find_plane(float x, float y, float z)
   }
 
   return idx;
+}
+
+void Plane3d::delete_plane(
+    Gl::ResourceManager& manager
+    , glm::vec3 coord)
+{
+  int idx = find_plane(coord.x, coord.y, coord.z);
+  int offset = idx*NUM_OF_VERTEX_INFO_PER_PLANE;
+  // plane3dv.glsl; struct plane_info
+  // index for uniform dynamic_block
+  m_tex.erase(m_tex.begin() + offset,
+              m_tex.begin() + offset + NUM_OF_VERTEX_INFO_PER_PLANE);
+  m_uniBuffer.SetGlBuffer((unsigned char *)&m_tex[0],
+                          m_tex.size()*sizeof(float),
+                          GL_UNIFORM_BUFFER
+                          );
+
+  offset = idx * 2 * 6;
+  m_dynamic.erase(m_dynamic.begin() + offset,
+                  m_dynamic.begin() + offset + 2*6);
+  for(int i = offset; i < m_dynamic.size(); i += 2)
+  {
+    // layout : fixed data index, dynamic table index
+    m_dynamic[i+1] -= 1;
+  }
+
+  int num_of_vertex = m_dynamic.size()/2;
+
+  manager.replace_gl_vbo_data(
+      gl_resource_id,
+      (unsigned char*)&m_dynamic[0],
+      num_of_vertex * 2 * sizeof(float),
+      num_of_vertex
+                          );
 }
 
 bool Plane3d::set_selected_plane(
@@ -355,6 +394,7 @@ bool Plane3d::set_selected_plane(
       , idx
       , app_common::app_gl_object::plane3d
                           );
+  highlight.set_selected_coord(manager, coord);
 
   return true;
 }
